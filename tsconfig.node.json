@@ -1,8 +1,14 @@
 {
   "extends": "./tsconfig.json",
   "include": [
+    "app/domain/translation-basis.ts",
+    "app/i18n/locales.ts",
+    "app/importer/**/*.ts",
+    "app/search/fts.ts",
+    "app/types/**/*.d.ts",
     "drizzle.config.ts",
     "eslint.config.js",
+    "scripts/**/*.ts",
     "vite.config.ts",
     "vitest.config.ts"
   ],
@@ -10,7 +16,7 @@
     "composite": true,
     "strict": true,
     "types": ["node"],
-    "lib": ["ES2022"],
+    "lib": ["DOM", "ES2022"],
     "target": "ES2022",
     "module": "ES2022",
     "moduleResolution": "bundler"

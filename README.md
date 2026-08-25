@@ -21,6 +21,9 @@ Locale routing, SSR page behavior, and fallback rules are documented in
 [`docs/architecture/ssr-routing.md`](./docs/architecture/ssr-routing.md).
 Scratchblocks enhancement and D1 FTS5 search are documented in
 [`docs/architecture/search-and-rendering.md`](./docs/architecture/search-and-rendering.md).
+The legacy snapshot importer, deterministic revision rules, and CLI are
+documented in
+[`docs/architecture/legacy-importer.md`](./docs/architecture/legacy-importer.md).
 
 ## Local development
 
@@ -58,6 +61,15 @@ Review generated SQL before applying it. Remote migrations are always explicit:
 ```sh
 npm run db:migrate:remote
 ```
+
+Import legacy content with a read-only dry-run first:
+
+```sh
+npm run import:legacy -- --source /path/to/scratch-modules-gallery --dry-run
+```
+
+See the importer architecture document before using `--apply-local` or the
+explicit `--apply-remote` mode.
 
 ## Deployment
 

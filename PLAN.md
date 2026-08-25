@@ -123,12 +123,12 @@ the initial implementation.
 
 ### Phase 4 — legacy importer
 
-- Parse the current legacy content snapshot, validate cross-file references,
-  normalize locales to BCP 47, calculate basis hashes, and emit deterministic
-  ids/revisions.
-- Provide dry-run diagnostics, transactional import, idempotency, attribution,
-  license preservation, and imported-count verification. Git history is not
-  imported.
+- [x] Parse the current legacy content snapshot, validate cross-file references,
+      normalize locales to BCP 47, calculate basis hashes, and emit
+      deterministic ids/revisions.
+- [x] Provide dry-run diagnostics, transactional D1 import, idempotency,
+      attribution, license preservation, content-addressed `.sb3` migration,
+      and imported-count verification. Git history is not imported.
 
 ### Phase 5 — hardening and release
 
