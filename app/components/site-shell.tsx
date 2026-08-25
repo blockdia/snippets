@@ -14,10 +14,62 @@ const localeLabels: Record<Locale, string> = {
   "zh-TW": "繁體中文",
 };
 
+const THEME_STORAGE_KEY = "scratch-snippets-theme";
+
 function pathForLocale(pathname: string, locale: Locale): string {
   const segments = pathname.split("/");
   segments[1] = toLocaleSegment(locale);
   return segments.join("/") || `/${toLocaleSegment(locale)}`;
+}
+
+function ThemeToggle({ label }: { label: string }) {
+  useEffect(() => {
+    const colorScheme = window.matchMedia("(prefers-color-scheme: dark)");
+
+    function followSystemTheme(event: MediaQueryListEvent) {
+      try {
+        const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+        if (storedTheme === "light" || storedTheme === "dark") return;
+      } catch {
+        // Continue following the system preference when storage is unavailable.
+      }
+
+      document.documentElement.dataset.theme = event.matches ? "dark" : "light";
+    }
+
+    colorScheme.addEventListener("change", followSystemTheme);
+    return () => colorScheme.removeEventListener("change", followSystemTheme);
+  }, []);
+
+  function toggleTheme() {
+    const root = document.documentElement;
+    const nextTheme = root.dataset.theme === "dark" ? "light" : "dark";
+
+    root.dataset.theme = nextTheme;
+
+    try {
+      window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+    } catch {
+      // The selected theme still applies for this page when storage is blocked.
+    }
+  }
+
+  return (
+    <button
+      aria-label={label}
+      className="theme-toggle"
+      onClick={toggleTheme}
+      title={label}
+      type="button"
+    >
+      <span aria-hidden="true" className="theme-icon theme-icon-sun">
+        ☀
+      </span>
+      <span aria-hidden="true" className="theme-icon theme-icon-moon">
+        ◐
+      </span>
+    </button>
+  );
 }
 
 export function SiteHeader({
@@ -72,24 +124,27 @@ export function SiteHeader({
           </NavLink>
         </nav>
 
-        <details className="locale-switcher" ref={localeSwitcherRef}>
-          <summary aria-label={messages.navigation.language}>
-            <span aria-hidden="true">◎</span>
-            <span>{localeLabels[locale]}</span>
-          </summary>
-          <div className="locale-menu">
-            {SUPPORTED_LOCALES.map((targetLocale) => (
-              <Link
-                aria-current={targetLocale === locale ? "page" : undefined}
-                key={targetLocale}
-                lang={targetLocale}
-                to={`${pathForLocale(location.pathname, targetLocale)}${location.search}`}
-              >
-                {localeLabels[targetLocale]}
-              </Link>
-            ))}
-          </div>
-        </details>
+        <div className="header-actions">
+          <ThemeToggle label={messages.navigation.theme} />
+          <details className="locale-switcher" ref={localeSwitcherRef}>
+            <summary aria-label={messages.navigation.language}>
+              <span aria-hidden="true">◎</span>
+              <span>{localeLabels[locale]}</span>
+            </summary>
+            <div className="locale-menu">
+              {SUPPORTED_LOCALES.map((targetLocale) => (
+                <Link
+                  aria-current={targetLocale === locale ? "page" : undefined}
+                  key={targetLocale}
+                  lang={targetLocale}
+                  to={`${pathForLocale(location.pathname, targetLocale)}${location.search}`}
+                >
+                  {localeLabels[targetLocale]}
+                </Link>
+              ))}
+            </div>
+          </details>
+        </div>
       </div>
     </header>
   );

@@ -12,6 +12,28 @@ import type { Route } from "./+types/root";
 import { canonicalizeLocale, CONTENT_FALLBACK_LOCALE } from "./i18n/locales";
 import "./app.css";
 
+const themeInitializationScript = `
+  (() => {
+    const storageKey = "scratch-snippets-theme";
+    let theme;
+
+    try {
+      const storedTheme = window.localStorage.getItem(storageKey);
+      if (storedTheme === "light" || storedTheme === "dark") {
+        theme = storedTheme;
+      }
+    } catch {}
+
+    if (!theme) {
+      theme = window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light";
+    }
+
+    document.documentElement.dataset.theme = theme;
+  })();
+`;
+
 export function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const locale =
@@ -19,10 +41,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
     CONTENT_FALLBACK_LOCALE;
 
   return (
-    <html lang={locale}>
+    <html lang={locale} suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script
+          dangerouslySetInnerHTML={{ __html: themeInitializationScript }}
+        />
         <Meta />
         <Links />
       </head>

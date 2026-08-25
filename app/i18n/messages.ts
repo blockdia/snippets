@@ -7,6 +7,7 @@ const en = {
     snippets: "Snippets",
     search: "Search",
     language: "Language",
+    theme: "Switch color theme",
   },
   home: {
     eyebrow: "A shared library for Scratch makers",
@@ -107,6 +108,7 @@ const zhCN: Messages = {
     snippets: "代码片段",
     search: "搜索",
     language: "语言",
+    theme: "切换深浅色模式",
   },
   home: {
     eyebrow: "为 Scratch 创作者共享的代码库",
@@ -192,6 +194,7 @@ const zhTW: Messages = {
     snippets: "程式片段",
     search: "搜尋",
     language: "語言",
+    theme: "切換深淺色模式",
   },
   home: {
     eyebrow: "為 Scratch 創作者共享的程式庫",
