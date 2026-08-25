@@ -19,14 +19,11 @@ export function SnippetCard({
       to={`/${toLocaleSegment(locale)}/snippets/${card.slug}`}
     >
       <article className="snippet-card-content">
-        <div className="snippet-card-topline">
-          <span className="snippet-glyph" aria-hidden="true">
-            ◆
-          </span>
-          {card.fallbackUsed ? (
+        {card.fallbackUsed ? (
+          <div className="snippet-card-topline">
             <span className="fallback-pill">{messages.card.fallback}</span>
-          ) : null}
-        </div>
+          </div>
+        ) : null}
         <div>
           <h3>{card.title}</h3>
           <p>{card.summary}</p>
