@@ -16,6 +16,7 @@ import {
   snippetRevisionTranslationUnits,
   snippetRevisions,
   snippets,
+  tagLocalizations,
   tags,
 } from "../db/schema";
 import { computeTranslationBasisHash } from "../domain/translation-basis";
@@ -24,6 +25,7 @@ import {
   canonicalizeLocale,
   type Locale,
 } from "../i18n/locales";
+import { createCjkSearchTerms, createFtsQuery } from "../search/fts";
 
 type SearchDocumentInsert = typeof searchDocuments.$inferInsert;
 
@@ -131,6 +133,185 @@ export interface PublishedSnippetCard {
   title: string;
   summary: string;
   updatedAt: string;
+}
+
+export interface SearchResultPage {
+  items: (PublishedSnippetCard & { rank: number })[];
+  total: number;
+}
+
+export interface SearchTag {
+  slug: string;
+  name: string;
+  snippetCount: number;
+}
+
+export async function searchPublishedSnippets(
+  db: AppDatabase,
+  requestedLocale: Locale,
+  options: {
+    query: string;
+    tagSlug?: string | null;
+    limit?: number;
+    offset?: number;
+  },
+): Promise<SearchResultPage> {
+  const limit = Math.min(Math.max(options.limit ?? 24, 1), 100);
+  const offset = Math.max(options.offset ?? 0, 0);
+  const tagSlug = options.tagSlug || null;
+  const query = options.query.trim().slice(0, 200);
+  const ftsQuery = createFtsQuery(query);
+
+  if (query && !ftsQuery) return { items: [], total: 0 };
+
+  type SearchRow = {
+    id: string;
+    slug: string;
+    locale: string;
+    title: string;
+    summary: string;
+    updatedAt: string;
+    rank: number;
+  };
+  type CountRow = { total: number };
+
+  const eligibleDocuments = sql`
+    SELECT sd.id AS document_id
+    FROM ${searchDocuments} AS sd
+    WHERE
+      sd.locale = ${requestedLocale}
+      OR (
+        sd.locale = ${CONTENT_FALLBACK_LOCALE}
+        AND NOT EXISTS (
+          SELECT 1
+          FROM ${searchDocuments} AS preferred
+          WHERE preferred.snippet_id = sd.snippet_id
+            AND preferred.locale = ${requestedLocale}
+        )
+      )
+  `;
+
+  const tagPredicate = sql`
+    AND (
+      ${tagSlug} IS NULL
+      OR EXISTS (
+        SELECT 1
+        FROM ${snippetPublications} AS current_publication
+        INNER JOIN ${snippetRevisionTags} AS revision_tag
+          ON revision_tag.revision_id = current_publication.revision_id
+        INNER JOIN ${tags} AS filter_tag ON filter_tag.id = revision_tag.tag_id
+        WHERE current_publication.snippet_id = sd.snippet_id
+          AND filter_tag.slug = ${tagSlug}
+      )
+    )
+  `;
+
+  const [rows, countRows] = ftsQuery
+    ? await Promise.all([
+        db.all<SearchRow>(sql`
+        WITH eligible AS (${eligibleDocuments})
+        SELECT
+          sd.snippet_id AS id,
+          s.slug AS slug,
+          sd.locale AS locale,
+          sd.title AS title,
+          sd.summary AS summary,
+          sd.updated_at AS updatedAt,
+          bm25(snippet_search_fts, 8.0, 4.0, 1.0, 3.0, 2.0) AS rank
+        FROM snippet_search_fts
+        INNER JOIN eligible ON eligible.document_id = snippet_search_fts.rowid
+        INNER JOIN ${searchDocuments} AS sd ON sd.id = snippet_search_fts.rowid
+        INNER JOIN ${snippets} AS s ON s.id = sd.snippet_id
+        WHERE snippet_search_fts MATCH ${ftsQuery}
+          AND s.status = 'active'
+          ${tagPredicate}
+        ORDER BY rank ASC, sd.updated_at DESC, sd.snippet_id ASC
+        LIMIT ${limit} OFFSET ${offset}
+      `),
+        db.all<CountRow>(sql`
+          WITH eligible AS (${eligibleDocuments})
+          SELECT count(*) AS total
+          FROM snippet_search_fts
+          INNER JOIN eligible ON eligible.document_id = snippet_search_fts.rowid
+          INNER JOIN ${searchDocuments} AS sd ON sd.id = snippet_search_fts.rowid
+          INNER JOIN ${snippets} AS s ON s.id = sd.snippet_id
+          WHERE snippet_search_fts MATCH ${ftsQuery}
+            AND s.status = 'active'
+            ${tagPredicate}
+        `),
+      ])
+    : await Promise.all([
+        db.all<SearchRow>(sql`
+        WITH eligible AS (${eligibleDocuments})
+        SELECT
+          sd.snippet_id AS id,
+          s.slug AS slug,
+          sd.locale AS locale,
+          sd.title AS title,
+          sd.summary AS summary,
+          sd.updated_at AS updatedAt,
+          0 AS rank
+        FROM eligible
+        INNER JOIN ${searchDocuments} AS sd ON sd.id = eligible.document_id
+        INNER JOIN ${snippets} AS s ON s.id = sd.snippet_id
+        WHERE s.status = 'active'
+          ${tagPredicate}
+        ORDER BY sd.updated_at DESC, sd.snippet_id ASC
+        LIMIT ${limit} OFFSET ${offset}
+      `),
+        db.all<CountRow>(sql`
+          WITH eligible AS (${eligibleDocuments})
+          SELECT count(*) AS total
+          FROM eligible
+          INNER JOIN ${searchDocuments} AS sd ON sd.id = eligible.document_id
+          INNER JOIN ${snippets} AS s ON s.id = sd.snippet_id
+          WHERE s.status = 'active'
+            ${tagPredicate}
+        `),
+      ]);
+
+  const items = rows.flatMap((row) => {
+    const locale = canonicalizeLocale(row.locale);
+    return locale
+      ? [
+          {
+            id: row.id,
+            slug: row.slug,
+            requestedLocale,
+            locale,
+            fallbackUsed: locale !== requestedLocale,
+            title: row.title,
+            summary: row.summary,
+            updatedAt: row.updatedAt,
+            rank: row.rank,
+          },
+        ]
+      : [];
+  });
+
+  return { items, total: countRows[0]?.total ?? 0 };
+}
+
+export async function listSearchTags(
+  db: AppDatabase,
+  requestedLocale: Locale,
+): Promise<SearchTag[]> {
+  return db.all<SearchTag>(sql`
+    SELECT
+      t.slug AS slug,
+      coalesce(preferred.name, fallback.name, t.slug) AS name,
+      count(DISTINCT p.snippet_id) AS snippetCount
+    FROM ${tags} AS t
+    INNER JOIN ${snippetRevisionTags} AS rt ON rt.tag_id = t.id
+    INNER JOIN ${snippetPublications} AS p ON p.revision_id = rt.revision_id
+    INNER JOIN ${snippets} AS s ON s.id = p.snippet_id AND s.status = 'active'
+    LEFT JOIN ${tagLocalizations} AS preferred
+      ON preferred.tag_id = t.id AND preferred.locale = ${requestedLocale}
+    LEFT JOIN ${tagLocalizations} AS fallback
+      ON fallback.tag_id = t.id AND fallback.locale = ${CONTENT_FALLBACK_LOCALE}
+    GROUP BY t.id, t.slug, preferred.name, fallback.name
+    ORDER BY name COLLATE NOCASE ASC, t.slug ASC
+  `);
 }
 
 export async function listPublishedSnippets(
@@ -782,7 +963,16 @@ async function collectSearchDocuments(
       title: localization.title,
       summary: localization.summary,
       body: localization.body,
-      keywords: localization.keywords.join(" "),
+      keywords: [
+        ...localization.keywords,
+        ...createCjkSearchTerms([
+          localization.title,
+          localization.summary,
+          localization.body,
+          ...localization.keywords,
+          ...scripts.map((script) => script.source),
+        ]),
+      ].join(" "),
       scripts: scripts.map((script) => script.source).join("\n"),
       updatedAt: input.updatedAt,
     });

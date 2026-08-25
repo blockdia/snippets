@@ -11,17 +11,22 @@ import {
   snippetLocalizations,
   snippetPublications,
   snippetRevisionScripts,
+  snippetRevisionTags,
   snippetRevisionTranslationUnits,
   snippetRevisions,
   snippets,
+  tagLocalizations,
+  tags,
 } from "../app/db/schema";
 import { computeTranslationBasisHash } from "../app/domain/translation-basis";
 import {
   PublicationError,
+  listSearchTags,
   listPublishedSnippets,
   publishLocalizationRevision,
   publishSnippetRevision,
   resolvePublishedSnippet,
+  searchPublishedSnippets,
 } from "../app/services/snippets.server";
 
 const migrations = inject("d1Migrations");
@@ -149,6 +154,82 @@ async function seedChineseLocalization(
 }
 
 describe("snippet publication model", () => {
+  it("searches only the preferred eligible document and supports tag filters", async () => {
+    const db = createDatabase(env.DB);
+    const localized = await seedSnippet(db, crypto.randomUUID());
+    const fallback = await seedSnippet(db, crypto.randomUUID());
+    const chineseRevisionId = await seedChineseLocalization(
+      db,
+      localized,
+      crypto.randomUUID(),
+    );
+
+    await db.insert(tags).values({ id: "tag-search-motion", slug: "motion" });
+    await db.insert(tagLocalizations).values([
+      { tagId: "tag-search-motion", locale: "en", name: "Motion" },
+      { tagId: "tag-search-motion", locale: "zh-CN", name: "运动" },
+    ]);
+    await db.insert(snippetRevisionTags).values({
+      revisionId: localized.revisionId,
+      tagId: "tag-search-motion",
+    });
+
+    await publishSnippetRevision(db, {
+      snippetId: localized.snippetId,
+      revisionId: localized.revisionId,
+      englishLocalizationRevisionId: localized.englishRevisionId,
+    });
+    await publishLocalizationRevision(db, {
+      localizationRevisionId: chineseRevisionId,
+    });
+    await publishSnippetRevision(db, {
+      snippetId: fallback.snippetId,
+      revisionId: fallback.revisionId,
+      englishLocalizationRevisionId: fallback.englishRevisionId,
+    });
+
+    const cjk = await searchPublishedSnippets(db, "zh-CN", {
+      query: "中文可搜",
+    });
+    expect(cjk.items).toEqual([
+      expect.objectContaining({
+        id: localized.snippetId,
+        locale: "zh-CN",
+        fallbackUsed: false,
+      }),
+    ]);
+
+    const preferredLocaleExcludesEnglish = await searchPublishedSnippets(
+      db,
+      "zh-CN",
+      { query: "English searchable" },
+    );
+    expect(preferredLocaleExcludesEnglish.items).toEqual([
+      expect.objectContaining({
+        id: fallback.snippetId,
+        locale: "en",
+        fallbackUsed: true,
+      }),
+    ]);
+
+    const all = await searchPublishedSnippets(db, "zh-CN", { query: "" });
+    expect(all.total).toBe(2);
+    expect(new Set(all.items.map((item) => item.id)).size).toBe(2);
+
+    const filtered = await searchPublishedSnippets(db, "zh-CN", {
+      query: "",
+      tagSlug: "motion",
+    });
+    expect(filtered.total).toBe(1);
+    expect(filtered.items[0]?.id).toBe(localized.snippetId);
+
+    await expect(listSearchTags(db, "zh-CN")).resolves.toContainEqual({
+      slug: "motion",
+      name: "运动",
+      snippetCount: 1,
+    });
+  });
+
   it("publishes with English fallback, then prefers a compatible target locale", async () => {
     const db = createDatabase(env.DB);
     const seed = await seedSnippet(db, crypto.randomUUID());
@@ -200,9 +281,12 @@ describe("snippet publication model", () => {
     expect(documents).toHaveLength(2);
 
     const fts = await env.DB.prepare(
-      "SELECT rowid FROM snippet_search_fts WHERE snippet_search_fts MATCH ?",
+      `SELECT snippet_search_fts.rowid
+       FROM snippet_search_fts
+       INNER JOIN search_documents AS documents ON documents.id = snippet_search_fts.rowid
+       WHERE snippet_search_fts MATCH ? AND documents.snippet_id = ?`,
     )
-      .bind("searchable")
+      .bind("searchable", seed.snippetId)
       .all();
     expect(fts.results).toHaveLength(1);
   });

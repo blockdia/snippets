@@ -1,6 +1,7 @@
 import { data, isRouteErrorResponse, Link } from "react-router";
 
 import type { Route } from "./+types/snippet-detail";
+import { ScratchblocksRenderer } from "../components/scratchblocks-renderer";
 import { publicPageHeaders } from "../http/public-page";
 import { getMessages } from "../i18n/messages";
 import {
@@ -158,9 +159,31 @@ export default function SnippetDetail({ loaderData }: Route.ComponentProps) {
                   {units.get(`script:${script.key}:title`) ??
                     `${messages.detail.scriptUntitled} ${index + 1}`}
                 </h3>
-                <pre>
-                  <code>{script.source}</code>
-                </pre>
+                {snippet.revision.representation === "scratchblocks" ? (
+                  <ScratchblocksRenderer
+                    labels={{
+                      appearance: messages.detail.appearance,
+                      translate: messages.detail.translateCode,
+                      originalLanguage: messages.detail.originalLanguage,
+                      copy: messages.detail.copyCode,
+                      copied: messages.detail.copied,
+                      copyFailed: messages.detail.copyFailed,
+                      exportSvg: messages.detail.exportSvg,
+                      exportPng: messages.detail.exportPng,
+                      renderFailed: messages.detail.renderFailed,
+                      codePreview: messages.detail.codePreview,
+                      highContrast: messages.detail.highContrast,
+                      outline: messages.detail.outline,
+                    }}
+                    scriptKey={script.key}
+                    source={script.source}
+                    sourceLocale={snippet.localization.locale}
+                  />
+                ) : (
+                  <pre>
+                    <code>{script.source}</code>
+                  </pre>
+                )}
               </article>
             ))}
           </div>

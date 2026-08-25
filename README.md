@@ -19,6 +19,8 @@ The D1 entities and publication invariants are documented in
 [`docs/architecture/content-domain.md`](./docs/architecture/content-domain.md).
 Locale routing, SSR page behavior, and fallback rules are documented in
 [`docs/architecture/ssr-routing.md`](./docs/architecture/ssr-routing.md).
+Scratchblocks enhancement and D1 FTS5 search are documented in
+[`docs/architecture/search-and-rendering.md`](./docs/architecture/search-and-rendering.md).
 
 ## Local development
 

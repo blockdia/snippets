@@ -48,6 +48,9 @@ export function SiteHeader({
           <NavLink to={`/${localeSegment}/snippets`}>
             {messages.navigation.snippets}
           </NavLink>
+          <NavLink to={`/${localeSegment}/search`}>
+            {messages.navigation.search}
+          </NavLink>
         </nav>
 
         <details className="locale-switcher">

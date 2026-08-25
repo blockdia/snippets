@@ -111,10 +111,15 @@ the initial implementation.
 
 ### Phase 3 — scratchblocks and search
 
-- Port scratchblocks rendering, translation support, copy/export affordances,
-  and necessary styles as isolated client enhancements over SSR content.
-- Implement FTS5 indexing and the eligible-document-first search query, with
-  ranking, filters, pagination, and regression tests for deduplication/fallback.
+- [x] Port scratchblocks rendering, supported-language translation, persistent
+      style preferences, copy, SVG/PNG export, and necessary styles as an
+      isolated client enhancement over SSR source code.
+- [x] Implement FTS5 indexing and eligible-document-first search with weighted
+      BM25 ranking, CJK search terms, topic filtering, pagination, and localized
+      SSR search pages.
+- [x] Add regressions proving one row per snippet, requested-locale priority,
+      English-only fallback, CJK substring matching, and current-revision tag
+      filtering.
 
 ### Phase 4 — legacy importer
 

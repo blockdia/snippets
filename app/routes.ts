@@ -6,5 +6,6 @@ export default [
     index("routes/locale-home.tsx"),
     route("snippets", "routes/snippets-index.tsx"),
     route("snippets/:slug", "routes/snippet-detail.tsx"),
+    route("search", "routes/search.tsx"),
   ]),
 ] satisfies RouteConfig;
