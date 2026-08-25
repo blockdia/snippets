@@ -1,10 +1,10 @@
 import zhCN from "scratchblocks-plus/locales/zh-cn.json";
 import zhTW from "scratchblocks-plus/locales/zh-tw.json";
-import { blockName } from "scratchblocks-plus/syntax/blocks.js";
 import * as scratchblocks from "scratchblocks-plus/syntax/index.js";
 import type {
-  SyntaxBlock,
-  SyntaxChild,
+  Block,
+  BlockChild,
+  ScriptBlock,
 } from "scratchblocks-plus/syntax/index.js";
 
 import type { Locale } from "../i18n/locales";
@@ -20,13 +20,13 @@ export interface LegacyNameMaps {
 
 scratchblocks.loadLanguages({ zh_cn: zhCN, zh_tw: zhTW });
 
-function customBlockPattern(block: SyntaxBlock) {
-  const argumentsFound: SyntaxChild[] = [];
+function customBlockPattern(block: Block) {
+  const argumentsFound: BlockChild[] = [];
   const tokens: string[] = [];
   for (const child of block.children) {
     if (child.isIcon) continue;
     if (child.isLabel) {
-      const text = String(child.value ?? "").trim();
+      const text = child.value.trim();
       if (text) tokens.push(text);
     } else if (!child.isScript) {
       argumentsFound.push(child);
@@ -40,11 +40,11 @@ function customBlockPattern(block: SyntaxBlock) {
 }
 
 function applyLocalizedPattern(
-  block: SyntaxBlock,
+  block: Block,
   localizedPattern: string,
-  argumentsFound: SyntaxChild[],
+  argumentsFound: BlockChild[],
 ) {
-  const children: SyntaxChild[] = [];
+  const children: BlockChild[] = [];
   for (const part of localizedPattern.split(/(%\d+)/)) {
     const placeholder = part.match(/^%(\d+)$/);
     if (placeholder) {
@@ -59,52 +59,64 @@ function applyLocalizedPattern(
   if (children.length) block.children = children;
 }
 
-function translateFields(blocks: SyntaxBlock[], maps: LegacyNameMaps) {
-  for (const block of blocks) {
-    if (block.isComment && block.label) {
-      block.label.value =
-        maps.comments?.[block.label.value.trim()] ?? block.label.value;
-      continue;
-    }
-    if (block.comment) {
-      block.comment.label.value =
-        maps.comments?.[block.comment.label.value.trim()] ??
-        block.comment.label.value;
-    }
-    if (block.info.selector === "readVariable") {
-      const translated = maps.vars?.[blockName(block)];
-      if (translated) block.children = [new scratchblocks.Label(translated)];
-      continue;
-    }
-    if (block.info.category === "custom-arg") {
-      const translated = maps.params?.[blockName(block)];
-      if (translated) block.children = [new scratchblocks.Label(translated)];
-      continue;
-    }
-    if (block.isOutline || block.info.id === "PROCEDURES_CALL") {
-      const { pattern, argumentsFound } = customBlockPattern(block);
-      const translated = maps.procs?.[pattern];
-      if (translated) applyLocalizedPattern(block, translated, argumentsFound);
-    }
+function translateComment(value: string, maps: LegacyNameMaps): string {
+  return maps.comments?.[value.trim()] ?? value;
+}
 
-    for (const child of block.children) {
-      if (child.isScript && child.blocks) {
-        translateFields(child.blocks, maps);
-      } else if (child.isBlock) {
-        translateFields([child as SyntaxBlock], maps);
-      }
-      if (child.shape === "dropdown" && !child.menu) {
-        const current = String(child.value ?? "");
-        if (block.info.category === "variables") {
-          child.value = maps.vars?.[current] ?? current;
-        } else if (block.info.category === "list") {
-          child.value = maps.lists?.[current] ?? current;
-        } else if (block.info.category === "events") {
-          child.value = maps.events?.[current] ?? current;
-        }
+function translateNode(node: BlockChild, maps: LegacyNameMaps): void {
+  if (node.isScript) {
+    translateFields(node.blocks, maps);
+  } else if (node.isBlock) {
+    translateBlock(node, maps);
+  } else if (node.isGlow) {
+    translateNode(node.child, maps);
+  } else if (node.isComment) {
+    node.label.value = translateComment(node.label.value, maps);
+  }
+}
+
+function translateBlock(block: Block, maps: LegacyNameMaps): void {
+  if (block.comment) {
+    block.comment.label.value = translateComment(
+      block.comment.label.value,
+      maps,
+    );
+  }
+  if (block.info.selector === "readVariable") {
+    const name = scratchblocks.blockName(block);
+    const translated = name ? maps.vars?.[name] : undefined;
+    if (translated) block.children = [new scratchblocks.Label(translated)];
+    return;
+  }
+  if (block.info.category === "custom-arg") {
+    const name = scratchblocks.blockName(block);
+    const translated = name ? maps.params?.[name] : undefined;
+    if (translated) block.children = [new scratchblocks.Label(translated)];
+    return;
+  }
+  if (block.isOutline || block.info.id === "PROCEDURES_CALL") {
+    const { pattern, argumentsFound } = customBlockPattern(block);
+    const translated = maps.procs?.[pattern];
+    if (translated) applyLocalizedPattern(block, translated, argumentsFound);
+  }
+
+  for (const child of block.children) {
+    translateNode(child, maps);
+    if (child.isInput && child.shape === "dropdown" && !child.menu) {
+      const current = String(child.value ?? "");
+      if (block.info.category === "variables") {
+        child.value = maps.vars?.[current] ?? current;
+      } else if (block.info.category === "list") {
+        child.value = maps.lists?.[current] ?? current;
+      } else if (block.info.category === "events") {
+        child.value = maps.events?.[current] ?? current;
       }
     }
   }
+}
+
+function translateFields(blocks: ScriptBlock[], maps: LegacyNameMaps): void {
+  for (const block of blocks) translateNode(block, maps);
 }
 
 export function translateLegacyScratchblocks(
