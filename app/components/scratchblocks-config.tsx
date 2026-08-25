@@ -22,12 +22,14 @@ export type ScratchblocksScale = (typeof SCRATCHBLOCKS_SCALES)[number];
 export type ScratchblocksTranslation = Locale | "original";
 
 interface ScratchblocksConfig {
+  catHats: boolean;
   scale: ScratchblocksScale;
   style: ScratchblocksStyle;
   translation: ScratchblocksTranslation;
 }
 
 interface ScratchblocksConfigContextValue extends ScratchblocksConfig {
+  setCatHats: (catHats: boolean) => void;
   setScale: (scale: ScratchblocksScale) => void;
   setStyle: (style: ScratchblocksStyle) => void;
   setTranslation: (translation: ScratchblocksTranslation) => void;
@@ -36,6 +38,7 @@ interface ScratchblocksConfigContextValue extends ScratchblocksConfig {
 const STORAGE_KEY = "scratch-snippets-scratchblocks-config";
 const LEGACY_STYLE_STORAGE_KEY = "scratchblocks-style";
 const DEFAULT_CONFIG: ScratchblocksConfig = {
+  catHats: false,
   scale: 1,
   style: "scratch3",
   translation: "original",
@@ -66,6 +69,10 @@ function readStoredConfig(): ScratchblocksConfig {
       if (value && typeof value === "object") {
         const candidate = value as Partial<ScratchblocksConfig>;
         return {
+          catHats:
+            typeof candidate.catHats === "boolean"
+              ? candidate.catHats
+              : DEFAULT_CONFIG.catHats,
           scale: isScale(candidate.scale)
             ? candidate.scale
             : DEFAULT_CONFIG.scale,
@@ -109,6 +116,13 @@ export function ScratchblocksConfigProvider({
   const value = useMemo<ScratchblocksConfigContextValue>(
     () => ({
       ...config,
+      setCatHats(catHats) {
+        setConfig((current) => {
+          const next = { ...current, catHats };
+          storeConfig(next);
+          return next;
+        });
+      },
       setScale(scale) {
         setConfig((current) => {
           const next = { ...current, scale };

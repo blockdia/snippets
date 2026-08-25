@@ -64,7 +64,7 @@ export function ScratchblocksRenderer({
   const documentRef = useRef<Document | undefined>(undefined);
   const viewRef = useRef<DocumentView | undefined>(undefined);
   const feedbackTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const { scale, style, translation } = useScratchblocksConfig();
+  const { catHats, scale, style, translation } = useScratchblocksConfig();
   const [rendered, setRendered] = useState(false);
   const [renderFailed, setRenderFailed] = useState(false);
   const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">(
@@ -90,6 +90,7 @@ export function ScratchblocksRenderer({
           doc.translate(targetLanguage);
         }
         const view = api.newView(doc, {
+          catHats,
           style,
           scale: (style.startsWith("scratch3") ? 0.675 : 1) * scale,
         });
@@ -114,7 +115,15 @@ export function ScratchblocksRenderer({
     return () => {
       cancelled = true;
     };
-  }, [labels.codePreview, scale, source, sourceLocale, style, translation]);
+  }, [
+    catHats,
+    labels.codePreview,
+    scale,
+    source,
+    sourceLocale,
+    style,
+    translation,
+  ]);
 
   useEffect(
     () => () => {

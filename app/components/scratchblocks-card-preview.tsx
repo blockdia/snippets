@@ -62,7 +62,7 @@ export function ScratchblocksCardPreview({
   sourceLocale: Locale;
 }) {
   const motionRef = useRef<HTMLDivElement>(null);
-  const { style, translation } = useScratchblocksConfig();
+  const { catHats, style, translation } = useScratchblocksConfig();
 
   useEffect(() => {
     const motion = motionRef.current;
@@ -90,6 +90,7 @@ export function ScratchblocksCardPreview({
           document.translate(targetLanguage);
         }
         const view = api.newView(document, {
+          catHats,
           scale: style.startsWith("scratch3") ? 0.62 : 0.92,
           style,
         });
@@ -110,7 +111,7 @@ export function ScratchblocksCardPreview({
     return () => {
       cancelled = true;
     };
-  }, [source, sourceLocale, style, translation]);
+  }, [catHats, source, sourceLocale, style, translation]);
 
   return (
     <div className="snippet-card-preview-canvas">

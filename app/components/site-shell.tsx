@@ -81,13 +81,22 @@ function ThemeToggle({ label }: { label: string }) {
 
 function ScratchblocksSettings({ messages }: { messages: Messages }) {
   const appearanceId = useId();
+  const catHatsId = useId();
   const scaleId = useId();
   const translationId = useId();
   const panelId = useId();
   const settingsRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
-  const { scale, style, translation, setScale, setStyle, setTranslation } =
-    useScratchblocksConfig();
+  const {
+    catHats,
+    scale,
+    style,
+    translation,
+    setCatHats,
+    setScale,
+    setStyle,
+    setTranslation,
+  } = useScratchblocksConfig();
 
   useEffect(() => {
     if (!open) return;
@@ -158,6 +167,21 @@ function ScratchblocksSettings({ messages }: { messages: Messages }) {
               </option>
               <option value="scratch2">Scratch 2</option>
             </select>
+          </label>
+
+          <label className="scratchblocks-settings-toggle" htmlFor={catHatsId}>
+            <span>{messages.detail.catHats}</span>
+            <input
+              checked={catHats}
+              className="visually-hidden"
+              id={catHatsId}
+              onChange={(event) => setCatHats(event.currentTarget.checked)}
+              type="checkbox"
+            />
+            <span
+              aria-hidden="true"
+              className="scratchblocks-settings-toggle-track"
+            />
           </label>
 
           <label htmlFor={scaleId}>
