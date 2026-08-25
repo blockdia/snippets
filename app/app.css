@@ -1111,6 +1111,7 @@ html[data-theme="dark"] .theme-icon-moon {
 }
 
 .scratchblocks-renderer {
+  position: relative;
   overflow: hidden;
   border: 1px solid rgb(61 42 105 / 9%);
   border-radius: 15px;
@@ -1118,30 +1119,39 @@ html[data-theme="dark"] .theme-icon-moon {
 }
 
 .scratchblocks-toolbar {
+  position: absolute;
+  z-index: 1;
+  top: 10px;
+  right: 10px;
   display: flex;
-  align-items: end;
-  gap: 10px;
-  padding: 11px 12px;
-  border-bottom: 1px solid var(--line);
-  background: rgb(255 255 255 / 75%);
-  flex-wrap: wrap;
+  padding: 0;
 }
 
 .scratchblocks-actions button {
   min-height: 32px;
   padding: 0 9px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
+  border: 0;
+  border-left: 1px solid var(--line);
+  border-radius: 0;
   color: #5f556e;
-  background: #fff;
+  background: transparent;
   font: inherit;
   font-size: 0.69rem;
 }
 
 .scratchblocks-actions {
   display: flex;
-  gap: 5px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: rgb(255 255 255 / 92%);
+  box-shadow: 0 2px 8px rgb(48 32 88 / 10%);
   margin-left: auto;
+  backdrop-filter: blur(8px);
+}
+
+.scratchblocks-actions button:first-child {
+  border-left: 0;
 }
 
 .scratchblocks-actions button {
@@ -1151,7 +1161,6 @@ html[data-theme="dark"] .theme-icon-moon {
 
 .scratchblocks-actions button:hover:not(:disabled) {
   color: var(--purple-dark);
-  border-color: rgb(115 81 207 / 27%);
   background: #f6f2ff;
 }
 
@@ -1597,12 +1606,17 @@ html[data-theme="dark"] .scratchblocks-renderer {
 }
 
 html[data-theme="dark"] .scratchblocks-toolbar {
-  background: rgb(37 32 49 / 85%);
+  background: transparent;
+}
+
+html[data-theme="dark"] .scratchblocks-actions {
+  background: rgb(33 28 43 / 92%);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 22%);
 }
 
 html[data-theme="dark"] .scratchblocks-actions button {
   color: #c8c0d5;
-  background: #211c2b;
+  background: transparent;
 }
 
 html[data-theme="dark"] .scratchblocks-actions button:hover:not(:disabled) {
@@ -1845,19 +1859,6 @@ html[data-theme="dark"] .error-card {
   .search-tag-field select {
     width: 100%;
     max-width: none;
-  }
-
-  .scratchblocks-toolbar {
-    align-items: stretch;
-  }
-
-  .scratchblocks-actions {
-    width: 100%;
-    margin-left: 0;
-  }
-
-  .scratchblocks-actions button {
-    flex: 1;
   }
 
   .scratchblocks-canvas {
