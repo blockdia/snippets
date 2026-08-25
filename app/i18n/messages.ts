@@ -31,7 +31,6 @@ const en = {
   },
   card: {
     fallback: "English fallback",
-    open: "View snippet",
   },
   search: {
     eyebrow: "Search the library",
@@ -129,7 +128,6 @@ const zhCN: Messages = {
   },
   card: {
     fallback: "暂以英文显示",
-    open: "查看片段",
   },
   search: {
     eyebrow: "搜索代码库",
@@ -215,7 +213,6 @@ const zhTW: Messages = {
   },
   card: {
     fallback: "暫以英文顯示",
-    open: "查看片段",
   },
   search: {
     eyebrow: "搜尋程式庫",
