@@ -15,16 +15,20 @@ export const SCRATCHBLOCKS_STYLES = [
   "scratch3-outline",
   "scratch2",
 ] as const;
+export const SCRATCHBLOCKS_SCALES = [0.5, 0.75, 1, 1.25, 1.5] as const;
 
 export type ScratchblocksStyle = (typeof SCRATCHBLOCKS_STYLES)[number];
+export type ScratchblocksScale = (typeof SCRATCHBLOCKS_SCALES)[number];
 export type ScratchblocksTranslation = Locale | "original";
 
 interface ScratchblocksConfig {
+  scale: ScratchblocksScale;
   style: ScratchblocksStyle;
   translation: ScratchblocksTranslation;
 }
 
 interface ScratchblocksConfigContextValue extends ScratchblocksConfig {
+  setScale: (scale: ScratchblocksScale) => void;
   setStyle: (style: ScratchblocksStyle) => void;
   setTranslation: (translation: ScratchblocksTranslation) => void;
 }
@@ -32,6 +36,7 @@ interface ScratchblocksConfigContextValue extends ScratchblocksConfig {
 const STORAGE_KEY = "scratch-snippets-scratchblocks-config";
 const LEGACY_STYLE_STORAGE_KEY = "scratchblocks-style";
 const DEFAULT_CONFIG: ScratchblocksConfig = {
+  scale: 1,
   style: "scratch3",
   translation: "original",
 };
@@ -41,6 +46,10 @@ const ScratchblocksConfigContext =
 
 function isStyle(value: unknown): value is ScratchblocksStyle {
   return SCRATCHBLOCKS_STYLES.some((style) => style === value);
+}
+
+function isScale(value: unknown): value is ScratchblocksScale {
+  return SCRATCHBLOCKS_SCALES.some((scale) => scale === value);
 }
 
 function isTranslation(value: unknown): value is ScratchblocksTranslation {
@@ -57,6 +66,9 @@ function readStoredConfig(): ScratchblocksConfig {
       if (value && typeof value === "object") {
         const candidate = value as Partial<ScratchblocksConfig>;
         return {
+          scale: isScale(candidate.scale)
+            ? candidate.scale
+            : DEFAULT_CONFIG.scale,
           style: isStyle(candidate.style)
             ? candidate.style
             : DEFAULT_CONFIG.style,
@@ -97,6 +109,13 @@ export function ScratchblocksConfigProvider({
   const value = useMemo<ScratchblocksConfigContextValue>(
     () => ({
       ...config,
+      setScale(scale) {
+        setConfig((current) => {
+          const next = { ...current, scale };
+          storeConfig(next);
+          return next;
+        });
+      },
       setStyle(style) {
         setConfig((current) => {
           const next = { ...current, style };

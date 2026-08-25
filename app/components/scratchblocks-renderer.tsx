@@ -64,7 +64,7 @@ export function ScratchblocksRenderer({
   const documentRef = useRef<Document | undefined>(undefined);
   const viewRef = useRef<DocumentView | undefined>(undefined);
   const feedbackTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const { style, translation } = useScratchblocksConfig();
+  const { scale, style, translation } = useScratchblocksConfig();
   const [rendered, setRendered] = useState(false);
   const [renderFailed, setRenderFailed] = useState(false);
   const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">(
@@ -91,7 +91,7 @@ export function ScratchblocksRenderer({
         }
         const view = api.newView(doc, {
           style,
-          scale: style.startsWith("scratch3") ? 0.675 : 1,
+          scale: (style.startsWith("scratch3") ? 0.675 : 1) * scale,
         });
         const svg = view.render();
         svg.classList.add(`scratchblocks-style-${style}`);
@@ -114,7 +114,7 @@ export function ScratchblocksRenderer({
     return () => {
       cancelled = true;
     };
-  }, [labels.codePreview, source, sourceLocale, style, translation]);
+  }, [labels.codePreview, scale, source, sourceLocale, style, translation]);
 
   useEffect(
     () => () => {

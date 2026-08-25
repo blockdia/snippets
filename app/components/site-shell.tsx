@@ -8,7 +8,9 @@ import {
   type Locale,
 } from "../i18n/locales";
 import {
+  SCRATCHBLOCKS_SCALES,
   useScratchblocksConfig,
+  type ScratchblocksScale,
   type ScratchblocksStyle,
   type ScratchblocksTranslation,
 } from "./scratchblocks-config";
@@ -79,11 +81,12 @@ function ThemeToggle({ label }: { label: string }) {
 
 function ScratchblocksSettings({ messages }: { messages: Messages }) {
   const appearanceId = useId();
+  const scaleId = useId();
   const translationId = useId();
   const panelId = useId();
   const settingsRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
-  const { style, translation, setStyle, setTranslation } =
+  const { scale, style, translation, setScale, setStyle, setTranslation } =
     useScratchblocksConfig();
 
   useEffect(() => {
@@ -154,6 +157,25 @@ function ScratchblocksSettings({ messages }: { messages: Messages }) {
                 Scratch 3 · {messages.detail.outline}
               </option>
               <option value="scratch2">Scratch 2</option>
+            </select>
+          </label>
+
+          <label htmlFor={scaleId}>
+            <span>{messages.detail.blockScale}</span>
+            <select
+              id={scaleId}
+              onChange={(event) =>
+                setScale(
+                  Number(event.currentTarget.value) as ScratchblocksScale,
+                )
+              }
+              value={scale}
+            >
+              {SCRATCHBLOCKS_SCALES.map((scaleOption) => (
+                <option key={scaleOption} value={scaleOption}>
+                  {scaleOption * 100}%
+                </option>
+              ))}
             </select>
           </label>
 
