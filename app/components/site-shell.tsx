@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router";
 
 import type { Messages } from "../i18n/messages";
@@ -7,6 +7,11 @@ import {
   toLocaleSegment,
   type Locale,
 } from "../i18n/locales";
+import {
+  useScratchblocksConfig,
+  type ScratchblocksStyle,
+  type ScratchblocksTranslation,
+} from "./scratchblocks-config";
 
 const localeLabels: Record<Locale, string> = {
   en: "English",
@@ -72,6 +77,113 @@ function ThemeToggle({ label }: { label: string }) {
   );
 }
 
+function ScratchblocksSettings({ messages }: { messages: Messages }) {
+  const appearanceId = useId();
+  const translationId = useId();
+  const panelId = useId();
+  const settingsRef = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false);
+  const { style, translation, setStyle, setTranslation } =
+    useScratchblocksConfig();
+
+  useEffect(() => {
+    if (!open) return;
+
+    function closeSettings(event: PointerEvent) {
+      if (
+        event.target instanceof Node &&
+        !settingsRef.current?.contains(event.target)
+      ) {
+        setOpen(false);
+      }
+    }
+
+    function closeSettingsWithKeyboard(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+
+    document.addEventListener("pointerdown", closeSettings);
+    document.addEventListener("keydown", closeSettingsWithKeyboard);
+    return () => {
+      document.removeEventListener("pointerdown", closeSettings);
+      document.removeEventListener("keydown", closeSettingsWithKeyboard);
+    };
+  }, [open]);
+
+  return (
+    <div className="scratchblocks-settings" ref={settingsRef}>
+      <button
+        aria-controls={panelId}
+        aria-expanded={open}
+        aria-label={messages.navigation.scratchblocksSettings}
+        className="scratchblocks-settings-button"
+        onClick={() => setOpen((current) => !current)}
+        title={messages.navigation.scratchblocksSettings}
+        type="button"
+      >
+        <svg aria-hidden="true" viewBox="0 0 24 24">
+          <path d="M12 8.25A3.75 3.75 0 1 0 12 15.75 3.75 3.75 0 0 0 12 8.25Z" />
+          <path d="M19.4 13.42a7.8 7.8 0 0 0 .04-1.42 7.8 7.8 0 0 0-.04-1.42l2.03-1.58-2-3.46-2.38.96a8.1 8.1 0 0 0-2.46-1.42L14.23 2h-4.46l-.36 3.08A8.1 8.1 0 0 0 6.95 6.5l-2.38-.96-2 3.46 2.03 1.58A7.8 7.8 0 0 0 4.56 12c0 .48.02.95.04 1.42L2.57 15l2 3.46 2.38-.96a8.1 8.1 0 0 0 2.46 1.42l.36 3.08h4.46l.36-3.08a8.1 8.1 0 0 0 2.46-1.42l2.38.96 2-3.46-2.03-1.58Z" />
+        </svg>
+      </button>
+
+      {open ? (
+        <div
+          aria-label={messages.navigation.scratchblocksSettings}
+          className="scratchblocks-settings-popover"
+          id={panelId}
+        >
+          <div className="scratchblocks-settings-heading">
+            <h2>{messages.navigation.scratchblocksSettings}</h2>
+          </div>
+
+          <label htmlFor={appearanceId}>
+            <span>{messages.detail.appearance}</span>
+            <select
+              id={appearanceId}
+              onChange={(event) =>
+                setStyle(event.currentTarget.value as ScratchblocksStyle)
+              }
+              value={style}
+            >
+              <option value="scratch3">Scratch 3</option>
+              <option value="scratch3-high-contrast">
+                Scratch 3 · {messages.detail.highContrast}
+              </option>
+              <option value="scratch3-outline">
+                Scratch 3 · {messages.detail.outline}
+              </option>
+              <option value="scratch2">Scratch 2</option>
+            </select>
+          </label>
+
+          <label htmlFor={translationId}>
+            <span>{messages.detail.translateCode}</span>
+            <select
+              id={translationId}
+              onChange={(event) =>
+                setTranslation(
+                  event.currentTarget.value as ScratchblocksTranslation,
+                )
+              }
+              value={translation}
+            >
+              <option value="original">
+                {messages.detail.originalLanguage}
+              </option>
+              {SUPPORTED_LOCALES.map((targetLocale) => (
+                <option key={targetLocale} value={targetLocale}>
+                  {localeLabels[targetLocale]}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export function SiteHeader({
   locale,
   messages,
@@ -125,6 +237,7 @@ export function SiteHeader({
         </nav>
 
         <div className="header-actions">
+          <ScratchblocksSettings messages={messages} />
           <ThemeToggle label={messages.navigation.theme} />
           <details className="locale-switcher" ref={localeSwitcherRef}>
             <summary aria-label={messages.navigation.language}>

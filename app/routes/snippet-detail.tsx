@@ -162,9 +162,6 @@ export default function SnippetDetail({ loaderData }: Route.ComponentProps) {
                 {snippet.revision.representation === "scratchblocks" ? (
                   <ScratchblocksRenderer
                     labels={{
-                      appearance: messages.detail.appearance,
-                      translate: messages.detail.translateCode,
-                      originalLanguage: messages.detail.originalLanguage,
                       copy: messages.detail.copyCode,
                       copied: messages.detail.copied,
                       copyFailed: messages.detail.copyFailed,
@@ -172,8 +169,6 @@ export default function SnippetDetail({ loaderData }: Route.ComponentProps) {
                       exportPng: messages.detail.exportPng,
                       renderFailed: messages.detail.renderFailed,
                       codePreview: messages.detail.codePreview,
-                      highContrast: messages.detail.highContrast,
-                      outline: messages.detail.outline,
                     }}
                     scriptKey={script.key}
                     source={script.source}

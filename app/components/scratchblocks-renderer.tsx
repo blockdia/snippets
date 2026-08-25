@@ -1,20 +1,15 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type { Document, DocumentView } from "scratchblocks-plus";
 
-import { SUPPORTED_LOCALES, type Locale } from "../i18n/locales";
+import type { Locale } from "../i18n/locales";
 import {
   ensureScratchblocksLanguage,
   loadScratchblocksApi,
 } from "./scratchblocks-api";
-
-type ScratchblocksStyle =
-  "scratch3" | "scratch3-high-contrast" | "scratch3-outline" | "scratch2";
+import { useScratchblocksConfig } from "./scratchblocks-config";
 
 export interface ScratchblocksLabels {
-  appearance: string;
-  translate: string;
-  originalLanguage: string;
   copy: string;
   copied: string;
   copyFailed: string;
@@ -22,15 +17,7 @@ export interface ScratchblocksLabels {
   exportPng: string;
   renderFailed: string;
   codePreview: string;
-  highContrast: string;
-  outline: string;
 }
-
-const languageLabels: Record<Locale, string> = {
-  en: "English",
-  "zh-CN": "简体中文",
-  "zh-TW": "繁體中文",
-};
 
 async function copyText(text: string): Promise<boolean> {
   try {
@@ -73,33 +60,16 @@ export function ScratchblocksRenderer({
   source: string;
   sourceLocale: Locale;
 }) {
-  const appearanceId = useId();
-  const translationId = useId();
   const canvasRef = useRef<HTMLDivElement>(null);
   const documentRef = useRef<Document | undefined>(undefined);
   const viewRef = useRef<DocumentView | undefined>(undefined);
   const feedbackTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const [style, setStyle] = useState<ScratchblocksStyle>("scratch3");
-  const [translation, setTranslation] = useState<Locale | "original">(
-    "original",
-  );
+  const { style, translation } = useScratchblocksConfig();
   const [rendered, setRendered] = useState(false);
   const [renderFailed, setRenderFailed] = useState(false);
   const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">(
     "idle",
   );
-
-  useEffect(() => {
-    const stored = localStorage.getItem("scratchblocks-style");
-    if (
-      stored === "scratch3" ||
-      stored === "scratch3-high-contrast" ||
-      stored === "scratch3-outline" ||
-      stored === "scratch2"
-    ) {
-      setStyle(stored);
-    }
-  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -153,11 +123,6 @@ export function ScratchblocksRenderer({
     [],
   );
 
-  function changeStyle(nextStyle: ScratchblocksStyle) {
-    setStyle(nextStyle);
-    localStorage.setItem("scratchblocks-style", nextStyle);
-  }
-
   async function handleCopy() {
     const copied = await copyText(documentRef.current?.stringify() || source);
     setCopyState(copied ? "copied" : "failed");
@@ -175,44 +140,6 @@ export function ScratchblocksRenderer({
   return (
     <div className="scratchblocks-renderer">
       <div className="scratchblocks-toolbar">
-        <label htmlFor={appearanceId}>
-          <span>{labels.appearance}</span>
-          <select
-            id={appearanceId}
-            onChange={(event) =>
-              changeStyle(event.currentTarget.value as ScratchblocksStyle)
-            }
-            value={style}
-          >
-            <option value="scratch3">Scratch 3</option>
-            <option value="scratch3-high-contrast">
-              Scratch 3 · {labels.highContrast}
-            </option>
-            <option value="scratch3-outline">
-              Scratch 3 · {labels.outline}
-            </option>
-            <option value="scratch2">Scratch 2</option>
-          </select>
-        </label>
-
-        <label htmlFor={translationId}>
-          <span>{labels.translate}</span>
-          <select
-            id={translationId}
-            onChange={(event) =>
-              setTranslation(event.currentTarget.value as Locale | "original")
-            }
-            value={translation}
-          >
-            <option value="original">{labels.originalLanguage}</option>
-            {SUPPORTED_LOCALES.map((locale) => (
-              <option key={locale} value={locale}>
-                {languageLabels[locale]}
-              </option>
-            ))}
-          </select>
-        </label>
-
         <div className="scratchblocks-actions">
           <button
             className={copyState}

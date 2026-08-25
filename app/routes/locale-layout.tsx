@@ -1,6 +1,7 @@
 import { isRouteErrorResponse, Link, Outlet, redirect } from "react-router";
 
 import type { Route } from "./+types/locale-layout";
+import { ScratchblocksConfigProvider } from "../components/scratchblocks-config";
 import { SiteFooter, SiteHeader } from "../components/site-shell";
 import { getMessages } from "../i18n/messages";
 import {
@@ -28,13 +29,15 @@ export function loader({ params, request }: Route.LoaderArgs) {
 export default function LocaleLayout({ loaderData }: Route.ComponentProps) {
   const messages = getMessages(loaderData.locale);
   return (
-    <div className="site-frame">
-      <SiteHeader locale={loaderData.locale} messages={messages} />
-      <div className="page-frame">
-        <Outlet />
+    <ScratchblocksConfigProvider>
+      <div className="site-frame">
+        <SiteHeader locale={loaderData.locale} messages={messages} />
+        <div className="page-frame">
+          <Outlet />
+        </div>
+        <SiteFooter messages={messages} />
       </div>
-      <SiteFooter messages={messages} />
-    </div>
+    </ScratchblocksConfigProvider>
   );
 }
 

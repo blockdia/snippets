@@ -5,6 +5,7 @@ import {
   ensureScratchblocksLanguage,
   loadScratchblocksApi,
 } from "./scratchblocks-api";
+import { useScratchblocksConfig } from "./scratchblocks-config";
 
 const motionElements = new Set<HTMLElement>();
 let motionFrame: number | undefined;
@@ -61,6 +62,7 @@ export function ScratchblocksCardPreview({
   sourceLocale: Locale;
 }) {
   const motionRef = useRef<HTMLDivElement>(null);
+  const { style, translation } = useScratchblocksConfig();
 
   useEffect(() => {
     const motion = motionRef.current;
@@ -75,11 +77,24 @@ export function ScratchblocksCardPreview({
 
       try {
         const api = await loadScratchblocksApi();
-        const language = await ensureScratchblocksLanguage(api, sourceLocale);
-        const document = api.parse(source, { languages: [language, "en"] });
-        const view = api.newView(document, { scale: 0.62, style: "scratch3" });
+        const sourceCode = await ensureScratchblocksLanguage(api, sourceLocale);
+        const targetCode =
+          translation === "original"
+            ? sourceCode
+            : await ensureScratchblocksLanguage(api, translation);
+        const document = api.parse(source, {
+          languages: [sourceCode, "en"],
+        });
+        const targetLanguage = api.allLanguages[targetCode];
+        if (targetLanguage && targetCode !== sourceCode) {
+          document.translate(targetLanguage);
+        }
+        const view = api.newView(document, {
+          scale: style.startsWith("scratch3") ? 0.62 : 0.92,
+          style,
+        });
         const svg = view.render();
-        svg.classList.add("scratchblocks-style-scratch3");
+        svg.classList.add(`scratchblocks-style-${style}`);
         svg.setAttribute("aria-hidden", "true");
         svg.setAttribute("focusable", "false");
 
@@ -95,7 +110,7 @@ export function ScratchblocksCardPreview({
     return () => {
       cancelled = true;
     };
-  }, [source, sourceLocale]);
+  }, [source, sourceLocale, style, translation]);
 
   return (
     <div className="snippet-card-preview-canvas">

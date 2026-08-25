@@ -162,7 +162,12 @@ summary {
   gap: 8px;
 }
 
-.theme-toggle {
+.scratchblocks-settings {
+  position: relative;
+}
+
+.theme-toggle,
+.scratchblocks-settings-button {
   position: relative;
   display: grid;
   width: 38px;
@@ -180,10 +185,69 @@ summary {
     transform 160ms ease;
 }
 
-.theme-toggle:hover {
+.scratchblocks-settings-button svg {
+  width: 18px;
+  height: 18px;
+  overflow: visible;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.6;
+}
+
+.theme-toggle:hover,
+.scratchblocks-settings-button:hover,
+.scratchblocks-settings-button[aria-expanded="true"] {
   color: var(--purple-dark);
   background: rgb(115 81 207 / 9%);
   transform: translateY(-1px);
+}
+
+.scratchblocks-settings-popover {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 10px);
+  right: 0;
+  display: grid;
+  width: min(310px, calc(100vw - 28px));
+  gap: 14px;
+  padding: 17px;
+  border: 1px solid var(--line);
+  border-radius: 17px;
+  background: #fff;
+  box-shadow: 0 20px 56px rgb(46 31 84 / 18%);
+}
+
+.scratchblocks-settings-heading h2 {
+  margin: 0;
+  color: #433657;
+  font-size: 0.88rem;
+}
+
+.scratchblocks-settings-popover label {
+  display: grid;
+  gap: 6px;
+}
+
+.scratchblocks-settings-popover label > span {
+  color: #756b83;
+  font-size: 0.66rem;
+  font-weight: 780;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+}
+
+.scratchblocks-settings-popover select {
+  width: 100%;
+  min-height: 38px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: #574d67;
+  background: #fbfaff;
+  font: inherit;
+  font-size: 0.78rem;
 }
 
 .theme-icon {
@@ -1008,20 +1072,6 @@ html[data-theme="dark"] .theme-icon-moon {
   flex-wrap: wrap;
 }
 
-.scratchblocks-toolbar label {
-  display: grid;
-  gap: 4px;
-}
-
-.scratchblocks-toolbar label > span {
-  color: #81778f;
-  font-size: 0.61rem;
-  font-weight: 750;
-  letter-spacing: 0.035em;
-  text-transform: uppercase;
-}
-
-.scratchblocks-toolbar select,
 .scratchblocks-actions button {
   min-height: 32px;
   padding: 0 9px;
@@ -1031,10 +1081,6 @@ html[data-theme="dark"] .theme-icon-moon {
   background: #fff;
   font: inherit;
   font-size: 0.69rem;
-}
-
-.scratchblocks-toolbar select {
-  max-width: 190px;
 }
 
 .scratchblocks-actions {
@@ -1330,7 +1376,8 @@ html[data-theme="dark"] .site-header {
 
 html[data-theme="dark"] .primary-nav a,
 html[data-theme="dark"] .locale-switcher summary,
-html[data-theme="dark"] .theme-toggle {
+html[data-theme="dark"] .theme-toggle,
+html[data-theme="dark"] .scratchblocks-settings-button {
   color: #b6aec7;
   background: rgb(43 36 58 / 72%);
 }
@@ -1341,7 +1388,9 @@ html[data-theme="dark"] .primary-nav a {
 
 html[data-theme="dark"] .primary-nav a:hover,
 html[data-theme="dark"] .primary-nav a.active,
-html[data-theme="dark"] .theme-toggle:hover {
+html[data-theme="dark"] .theme-toggle:hover,
+html[data-theme="dark"] .scratchblocks-settings-button:hover,
+html[data-theme="dark"] .scratchblocks-settings-button[aria-expanded="true"] {
   color: #d5c8ff;
   background: rgb(151 116 238 / 14%);
 }
@@ -1349,6 +1398,24 @@ html[data-theme="dark"] .theme-toggle:hover {
 html[data-theme="dark"] .locale-menu {
   background: #211c2c;
   box-shadow: 0 18px 50px rgb(0 0 0 / 38%);
+}
+
+html[data-theme="dark"] .scratchblocks-settings-popover {
+  background: #211c2c;
+  box-shadow: 0 20px 56px rgb(0 0 0 / 42%);
+}
+
+html[data-theme="dark"] .scratchblocks-settings-heading h2 {
+  color: #e1d9ec;
+}
+
+html[data-theme="dark"] .scratchblocks-settings-popover label > span {
+  color: #a9a1b7;
+}
+
+html[data-theme="dark"] .scratchblocks-settings-popover select {
+  color: #cec6d9;
+  background: #292333;
 }
 
 html[data-theme="dark"] .locale-menu a {
@@ -1453,7 +1520,6 @@ html[data-theme="dark"] .representation-badge {
 }
 
 html[data-theme="dark"] .script-source h3,
-html[data-theme="dark"] .scratchblocks-toolbar label > span,
 html[data-theme="dark"] .detail-sidebar h2,
 html[data-theme="dark"] .metadata-list small {
   color: #aaa2b8;
@@ -1468,7 +1534,6 @@ html[data-theme="dark"] .scratchblocks-toolbar {
   background: rgb(37 32 49 / 85%);
 }
 
-html[data-theme="dark"] .scratchblocks-toolbar select,
 html[data-theme="dark"] .scratchblocks-actions button {
   color: #c8c0d5;
   background: #211c2b;
@@ -1599,6 +1664,16 @@ html[data-theme="dark"] .error-card {
     display: none;
   }
 
+  .header-actions {
+    gap: 4px;
+  }
+
+  .theme-toggle,
+  .scratchblocks-settings-button {
+    width: 34px;
+    height: 34px;
+  }
+
   .hero-copy-block h1 {
     font-size: clamp(2.65rem, 13.5vw, 4rem);
   }
@@ -1708,12 +1783,6 @@ html[data-theme="dark"] .error-card {
 
   .scratchblocks-toolbar {
     align-items: stretch;
-  }
-
-  .scratchblocks-toolbar label,
-  .scratchblocks-toolbar select {
-    width: 100%;
-    max-width: none;
   }
 
   .scratchblocks-actions {
