@@ -42,6 +42,7 @@ export type PublicationErrorCode =
   | "NOT_FOUND"
   | "OWNERSHIP_MISMATCH"
   | "INVALID_STATE"
+  | "INVALID_PREVIEW"
   | "LOCALE_MISMATCH"
   | "BASIS_MISMATCH"
   | "BASIS_INTEGRITY_MISMATCH"
@@ -197,13 +198,22 @@ export async function searchPublishedSnippets(
     (
       SELECT coalesce(localized_preview.source, source_preview.source)
       FROM ${snippetPublications} AS preview_publication
+      INNER JOIN ${snippetRevisions} AS preview_revision
+        ON preview_revision.id = preview_publication.revision_id
       INNER JOIN ${snippetRevisionScripts} AS source_preview
         ON source_preview.revision_id = preview_publication.revision_id
       LEFT JOIN ${snippetLocalizationRevisionScripts} AS localized_preview
         ON localized_preview.localization_revision_id = sd.localization_revision_id
         AND localized_preview.script_key = source_preview.script_key
       WHERE preview_publication.snippet_id = sd.snippet_id
-      ORDER BY source_preview.position ASC
+      ORDER BY
+        CASE
+          WHEN json_type(preview_revision.metadata, '$.previewScriptKey') = 'text'
+            AND source_preview.script_key = json_extract(preview_revision.metadata, '$.previewScriptKey')
+          THEN 0
+          ELSE 1
+        END,
+        source_preview.position ASC
       LIMIT 1
     )
   `;
@@ -361,13 +371,22 @@ export async function listPublishedSnippets(
       (
         SELECT coalesce(localized_preview.source, source_preview.source)
         FROM ${snippetPublications} AS preview_publication
+        INNER JOIN ${snippetRevisions} AS preview_revision
+          ON preview_revision.id = preview_publication.revision_id
         INNER JOIN ${snippetRevisionScripts} AS source_preview
           ON source_preview.revision_id = preview_publication.revision_id
         LEFT JOIN ${snippetLocalizationRevisionScripts} AS localized_preview
           ON localized_preview.localization_revision_id = sd.localization_revision_id
           AND localized_preview.script_key = source_preview.script_key
         WHERE preview_publication.snippet_id = sd.snippet_id
-        ORDER BY source_preview.position ASC
+        ORDER BY
+          CASE
+            WHEN json_type(preview_revision.metadata, '$.previewScriptKey') = 'text'
+              AND source_preview.script_key = json_extract(preview_revision.metadata, '$.previewScriptKey')
+            THEN 0
+            ELSE 1
+          END,
+          source_preview.position ASC
         LIMIT 1
       ) AS previewSource
     FROM ${searchDocuments} AS sd
@@ -418,6 +437,7 @@ export async function publishSnippetRevision(
       basis: snippetRevisions.translationBasisHash,
       representation: snippetRevisions.representation,
       representationVersion: snippetRevisions.representationVersion,
+      metadata: snippetRevisions.metadata,
       snippetStatus: snippets.status,
     })
     .from(snippetRevisions)
@@ -445,6 +465,37 @@ export async function publishSnippetRevision(
       "INVALID_STATE",
       "An archived snippet cannot publish a new revision",
     );
+  }
+
+  const previewScriptKey = revision.metadata?.previewScriptKey;
+  if (
+    previewScriptKey !== undefined &&
+    (typeof previewScriptKey !== "string" ||
+      !previewScriptKey.trim() ||
+      previewScriptKey !== previewScriptKey.trim())
+  ) {
+    throw new PublicationError(
+      "INVALID_PREVIEW",
+      "Preview script key must be a non-empty canonical script key",
+    );
+  }
+  if (previewScriptKey) {
+    const [previewScript] = await db
+      .select({ id: snippetRevisionScripts.id })
+      .from(snippetRevisionScripts)
+      .where(
+        and(
+          eq(snippetRevisionScripts.revisionId, revision.id),
+          eq(snippetRevisionScripts.scriptKey, previewScriptKey),
+        ),
+      )
+      .limit(1);
+    if (!previewScript) {
+      throw new PublicationError(
+        "INVALID_PREVIEW",
+        `Preview script ${previewScriptKey} does not exist in this revision`,
+      );
+    }
   }
 
   const computedBasis = await computeStoredTranslationBasisHash(

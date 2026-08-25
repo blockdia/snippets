@@ -110,6 +110,9 @@ SELECT
     artifactSource: snippet.artifact?.sourcePath ?? null,
     imports: snippet.imports,
     legacyId: snippet.legacyId,
+    ...(snippet.previewScriptKey
+      ? { previewScriptKey: snippet.previewScriptKey }
+      : {}),
     snapshotFingerprint: plan.fingerprint,
   })}, ${text(importedAt)}
 WHERE NOT EXISTS (SELECT 1 FROM snippet_revisions WHERE id = ${text(snippet.revisionId)});`);

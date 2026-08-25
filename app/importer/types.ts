@@ -23,6 +23,7 @@ export interface LegacyMeta {
   seoDescription?: string;
   tags?: string[];
   keywords?: string[];
+  previewScriptKey?: string;
   contributors?: unknown[];
   scriptTitles?: Record<string, string>;
   variables?: {
@@ -147,6 +148,7 @@ export interface ImportedSnippet {
   revisionId: string;
   contentHash: string;
   translationBasisHash: string;
+  previewScriptKey: string | null;
   scripts: ImportedScript[];
   units: ImportedUnit[];
   symbols: ImportedSymbol[];

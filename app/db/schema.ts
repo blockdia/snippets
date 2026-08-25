@@ -15,8 +15,13 @@ const timestamp = (name: string) =>
     .notNull()
     .default(sql`(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))`);
 
-const metadata = (name: string) =>
-  text(name, { mode: "json" }).$type<Record<string, unknown> | null>();
+const metadata = <T extends Record<string, unknown> = Record<string, unknown>>(
+  name: string,
+) => text(name, { mode: "json" }).$type<T | null>();
+
+export interface SnippetRevisionMetadata extends Record<string, unknown> {
+  previewScriptKey?: string;
+}
 
 export const locales = sqliteTable(
   "locales",
@@ -100,7 +105,7 @@ export const snippetRevisions = sqliteTable(
       .notNull()
       .default("editorial"),
     sourceRef: text("source_ref"),
-    metadata: metadata("metadata"),
+    metadata: metadata<SnippetRevisionMetadata>("metadata"),
     createdBy: text("created_by"),
     createdAt: timestamp("created_at"),
     publishedAt: text("published_at"),

@@ -315,6 +315,23 @@ function parseMeta(
     notePaths.set(locale, note.sourcePath);
   }
 
+  const rawPreviewScriptKey = source.previewScriptKey;
+  const previewScriptKey =
+    typeof rawPreviewScriptKey === "string" &&
+    rawPreviewScriptKey.length > 0 &&
+    rawPreviewScriptKey === rawPreviewScriptKey.trim()
+      ? rawPreviewScriptKey
+      : undefined;
+  if (rawPreviewScriptKey !== undefined && !previewScriptKey) {
+    addDiagnostic(
+      diagnostics,
+      "error",
+      "INVALID_PREVIEW_SCRIPT",
+      path,
+      "previewScriptKey must be a non-empty canonical script key",
+    );
+  }
+
   const meta: ParsedModule["meta"] = {
     ...(source as LegacyMeta),
     name,
@@ -334,6 +351,7 @@ function parseMeta(
       typeof source.seoDescription === "string"
         ? source.seoDescription
         : undefined,
+    previewScriptKey,
   };
 
   return {
@@ -604,6 +622,19 @@ export async function buildLegacyImportPlan(
       modules,
       diagnostics,
     );
+    const previewScriptKey = module.meta.previewScriptKey || null;
+    if (
+      previewScriptKey &&
+      !scriptDrafts.some((script) => script.key === previewScriptKey)
+    ) {
+      addDiagnostic(
+        diagnostics,
+        "error",
+        "INVALID_PREVIEW_SCRIPT",
+        legacyModulePath(module.directory, "meta.json"),
+        `Preview script ${previewScriptKey} does not exist after imports are resolved`,
+      );
+    }
     const snippetId = `legacy-snippet-${module.id}`;
 
     const unitsDraft: Omit<ImportedUnit, "id" | "position">[] = [];
@@ -743,6 +774,7 @@ export async function buildLegacyImportPlan(
         ? { key: artifact.key, sha256: artifact.sha256 }
         : null,
       imports,
+      ...(previewScriptKey ? { previewScriptKey } : {}),
       references: referencesDraft.map(
         ({ key, kind, url, titleUnitKey, position }) => ({
           key,
@@ -963,6 +995,7 @@ export async function buildLegacyImportPlan(
       revisionId,
       contentHash,
       translationBasisHash: basisHash,
+      previewScriptKey,
       scripts,
       units,
       symbols,

@@ -18,6 +18,7 @@ the application-wide fallback, not per-snippet data.
 A snippet revision owns:
 
 - ordered, stable-keyed scripts and their representation metadata;
+- an optional `metadata.previewScriptKey` selecting the card preview script;
 - stable-keyed translation units for script titles, symbols, procedures,
   comments, and reference labels;
 - language-independent symbol shape and scope;
@@ -27,6 +28,12 @@ A snippet revision owns:
 A localization revision owns translated prose, keywords, optional localized
 script overrides, translated units, and translator attribution. Published child
 rows are protected by D1 triggers; changes require a new revision.
+
+Card preview selection uses a script key rather than an array position so it
+survives script reordering. The same key resolves a localized script override;
+when no key is configured, readers fall back to the first script by position.
+Publication rejects configured keys that are malformed or absent from the code
+revision.
 
 ## Translation basis
 

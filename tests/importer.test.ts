@@ -69,6 +69,7 @@ function fixture(extraTag = false): LegacyInputSnapshot {
           id: "consumer",
           name: "Consumer",
           description: "Use the reusable power script",
+          previewScriptKey: "main",
           tags: extraTag ? ["math", "utility"] : ["math"],
           contributors: ["gh/example"],
           references: [
@@ -134,6 +135,7 @@ describe("legacy importer", () => {
       sourceModuleId: "power",
       importedFrom: { moduleId: "power", scriptId: "main" },
     });
+    expect(consumer?.previewScriptKey).toBe("main");
     expect(consumer?.localizations.map(({ locale }) => locale)).toEqual([
       "en",
       "zh-CN",
@@ -198,6 +200,9 @@ describe("legacy importer", () => {
       query: "复用乘方",
     });
     expect(search.items.map(({ slug }) => slug)).toContain("consumer");
+    expect(
+      search.items.find(({ slug }) => slug === "consumer")?.previewSource,
+    ).toContain("done");
   });
 
   it("creates a content revision without invalidating unchanged translations", async () => {
@@ -247,6 +252,26 @@ describe("legacy importer", () => {
     const plan = await buildLegacyImportPlan(invalid);
     expect(plan.diagnostics).toContainEqual(
       expect.objectContaining({ severity: "error", code: "IMPORT_NOT_FOUND" }),
+    );
+    expect(() =>
+      generateLegacyImportStatements(plan, "2026-08-25T00:00:00.000Z"),
+    ).toThrow("plan has errors");
+  });
+
+  it("rejects a preview key that does not resolve to an imported script", async () => {
+    const invalid = fixture();
+    invalid.modules[1]!.meta = {
+      ...(invalid.modules[1]!.meta as Record<string, unknown>),
+      previewScriptKey: "missing",
+    };
+
+    const plan = await buildLegacyImportPlan(invalid);
+
+    expect(plan.diagnostics).toContainEqual(
+      expect.objectContaining({
+        severity: "error",
+        code: "INVALID_PREVIEW_SCRIPT",
+      }),
     );
     expect(() =>
       generateLegacyImportStatements(plan, "2026-08-25T00:00:00.000Z"),

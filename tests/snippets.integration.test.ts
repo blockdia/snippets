@@ -301,6 +301,86 @@ describe("snippet publication model", () => {
     expect(fts.results).toHaveLength(1);
   });
 
+  it("uses an explicitly selected preview script instead of its position", async () => {
+    const db = createDatabase(env.DB);
+    const seed = await seedSnippet(db, crypto.randomUUID());
+    const usageSource = "when this sprite clicked\nsay [preview me]";
+    const basis = await computeTranslationBasisHash({
+      representation: "scratchblocks",
+      representationVersion: 1,
+      scripts: [
+        { key: "main", source: "when green flag clicked\nsay [hello]" },
+        { key: "usage", source: usageSource },
+      ],
+      units: [
+        {
+          key: "script:main:title",
+          kind: "script-title",
+          sourceText: "Main",
+        },
+      ],
+    });
+
+    await db.insert(snippetRevisionScripts).values({
+      id: `script-${seed.snippetId}-usage`,
+      revisionId: seed.revisionId,
+      scriptKey: "usage",
+      position: 1,
+      source: usageSource,
+    });
+    await db
+      .update(snippetRevisions)
+      .set({
+        metadata: { previewScriptKey: "usage" },
+        translationBasisHash: basis,
+      })
+      .where(eq(snippetRevisions.id, seed.revisionId));
+    await db
+      .update(snippetLocalizationRevisions)
+      .set({ translationBasisHash: basis })
+      .where(eq(snippetLocalizationRevisions.id, seed.englishRevisionId));
+
+    await publishSnippetRevision(db, {
+      snippetId: seed.snippetId,
+      revisionId: seed.revisionId,
+      englishLocalizationRevisionId: seed.englishRevisionId,
+    });
+
+    const listed = await listPublishedSnippets(db, "en");
+    expect(listed.find(({ id }) => id === seed.snippetId)?.previewSource).toBe(
+      usageSource,
+    );
+    const searched = await searchPublishedSnippets(db, "en", { query: "" });
+    expect(
+      searched.items.find(({ id }) => id === seed.snippetId)?.previewSource,
+    ).toBe(usageSource);
+  });
+
+  it("rejects a revision whose selected preview script is missing", async () => {
+    const db = createDatabase(env.DB);
+    const seed = await seedSnippet(db, crypto.randomUUID());
+    await db
+      .update(snippetRevisions)
+      .set({ metadata: { previewScriptKey: "missing" } })
+      .where(eq(snippetRevisions.id, seed.revisionId));
+
+    await expect(
+      publishSnippetRevision(db, {
+        snippetId: seed.snippetId,
+        revisionId: seed.revisionId,
+        englishLocalizationRevisionId: seed.englishRevisionId,
+      }),
+    ).rejects.toMatchObject({
+      code: "INVALID_PREVIEW",
+    } satisfies Partial<PublicationError>);
+
+    const publications = await db
+      .select()
+      .from(snippetPublications)
+      .where(eq(snippetPublications.snippetId, seed.snippetId));
+    expect(publications).toHaveLength(0);
+  });
+
   it("keeps translations valid across revisions with the same basis", async () => {
     const db = createDatabase(env.DB);
     const suffix = crypto.randomUUID();
