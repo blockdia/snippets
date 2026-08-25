@@ -1,0 +1,52 @@
+{
+  "name": "snippets",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "scripts": {
+    "build": "react-router build",
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run build && npm run deploy:dry-run",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate:local": "wrangler d1 migrations apply snippets --local",
+    "db:migrate:remote": "wrangler d1 migrations apply snippets --remote",
+    "dev": "react-router dev",
+    "deploy": "npm run build && wrangler deploy",
+    "deploy:dry-run": "wrangler deploy --dry-run",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint .",
+    "preview": "npm run build && vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "wrangler types && react-router typegen && tsc -b",
+    "cf-typegen": "wrangler types",
+    "postinstall": "wrangler types"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.45.2",
+    "isbot": "^5.1.36",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "react-router": "^8"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.53.1",
+    "@cloudflare/vitest-plugin": "^1.0.0",
+    "@eslint/js": "^10.0.1",
+    "@react-router/dev": "^8",
+    "@tailwindcss/vite": "^4.2.2",
+    "@types/node": "^22.20.1",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "drizzle-kit": "^0.31.10",
+    "eslint": "^10.9.1",
+    "globals": "^17.11.0",
+    "prettier": "^3.9.6",
+    "tailwindcss": "^4.2.2",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.68.0",
+    "vite": "^8.0.3",
+    "vitest": "^4.1.11",
+    "wrangler": "^4.125.0"
+  }
+}

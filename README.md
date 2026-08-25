@@ -1,0 +1,74 @@
+# Scratch Snippets
+
+An international, server-rendered library of reusable Scratch code patterns.
+This repository is a clean implementation; the legacy SSG project is used only
+as product and import reference.
+
+## Stack
+
+- Cloudflare Workers and Workers Static Assets
+- Cloudflare Vite Plugin
+- React Router v8 SSR and React 19
+- TypeScript
+- Cloudflare D1 with Drizzle ORM and FTS5
+
+The target architecture and phased implementation plan are documented in
+[`PLAN.md`](./PLAN.md).
+
+The D1 entities and publication invariants are documented in
+[`docs/architecture/content-domain.md`](./docs/architecture/content-domain.md).
+
+## Local development
+
+Install dependencies and start the local Worker:
+
+```sh
+npm install
+npm run dev
+```
+
+The app is served at `http://localhost:5173` with a local D1 binding. The
+all-zero database id in `wrangler.jsonc` is intentionally local-only; replace it
+when a real Cloudflare D1 database is provisioned.
+
+## Quality checks
+
+```sh
+npm run check
+```
+
+Individual commands are available for formatting, linting, type generation,
+Cloudflare-runtime tests, production builds, and deployment dry-runs.
+
+## Database workflow
+
+Drizzle table definitions live under `app/db`. Once schema changes are ready:
+
+```sh
+npm run db:generate
+npm run db:migrate:local
+```
+
+Review generated SQL before applying it. Remote migrations are always explicit:
+
+```sh
+npm run db:migrate:remote
+```
+
+## Deployment
+
+Build and inspect the Worker package without publishing:
+
+```sh
+npm run build
+npm run deploy:dry-run
+```
+
+`npm run deploy` performs a real Cloudflare deployment and should only be used
+after configuring the target account and real D1 database id.
+
+## Licensing
+
+Application source is AGPL-3.0-only. Explanations, Scratch code, and `.sb3`
+artifacts have separate content licenses described in
+[`CONTENT-LICENSES.md`](./CONTENT-LICENSES.md).
