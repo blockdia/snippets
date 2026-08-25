@@ -98,12 +98,11 @@ export default function SnippetDetail({ loaderData }: Route.ComponentProps) {
   const units = new Map(
     snippet.translationUnits.map((unit) => [unit.key, unit.text]),
   );
-  const localeSegment = toLocaleSegment(loaderData.locale);
 
   return (
     <main className="detail-page">
       <header className="detail-header">
-        <div>
+        <div className="detail-header-copy">
           <h1>{snippet.localization.title}</h1>
           <p>{snippet.localization.summary}</p>
         </div>
@@ -129,48 +128,64 @@ export default function SnippetDetail({ loaderData }: Route.ComponentProps) {
       ) : null}
 
       <div className="detail-layout">
-        <section className="code-panel" aria-labelledby="code-heading">
-          <div className="panel-heading">
-            <div>
-              <p className="eyebrow">scratchblocks</p>
-              <h2 id="code-heading">{messages.detail.code}</h2>
+        <div className="detail-content">
+          <section className="code-panel" aria-labelledby="code-heading">
+            <div className="panel-heading">
+              <div>
+                <p className="eyebrow">scratchblocks</p>
+                <h2 id="code-heading">{messages.detail.code}</h2>
+              </div>
+              <span className="representation-badge">
+                {snippet.revision.representation} v
+                {snippet.revision.representationVersion}
+              </span>
             </div>
-            <span className="representation-badge">
-              {snippet.revision.representation} v
-              {snippet.revision.representationVersion}
-            </span>
-          </div>
-          <div className="script-stack">
-            {snippet.scripts.map((script, index) => (
-              <article className="script-source" key={script.key}>
-                <h3>
-                  {units.get(`script:${script.key}:title`) ??
-                    `${messages.detail.scriptUntitled} ${index + 1}`}
-                </h3>
-                {snippet.revision.representation === "scratchblocks" ? (
-                  <ScratchblocksRenderer
-                    labels={{
-                      copy: messages.detail.copyCode,
-                      copied: messages.detail.copied,
-                      copyFailed: messages.detail.copyFailed,
-                      exportSvg: messages.detail.exportSvg,
-                      exportPng: messages.detail.exportPng,
-                      renderFailed: messages.detail.renderFailed,
-                      codePreview: messages.detail.codePreview,
-                    }}
-                    scriptKey={script.key}
-                    source={script.source}
-                    sourceLocale={snippet.localization.locale}
-                  />
-                ) : (
-                  <pre>
-                    <code>{script.source}</code>
-                  </pre>
+            <div className="script-stack">
+              {snippet.scripts.map((script, index) => (
+                <article className="script-source" key={script.key}>
+                  <h3>
+                    {units.get(`script:${script.key}:title`) ??
+                      `${messages.detail.scriptUntitled} ${index + 1}`}
+                  </h3>
+                  {snippet.revision.representation === "scratchblocks" ? (
+                    <ScratchblocksRenderer
+                      labels={{
+                        copy: messages.detail.copyCode,
+                        copied: messages.detail.copied,
+                        copyFailed: messages.detail.copyFailed,
+                        exportSvg: messages.detail.exportSvg,
+                        exportPng: messages.detail.exportPng,
+                        renderFailed: messages.detail.renderFailed,
+                        codePreview: messages.detail.codePreview,
+                      }}
+                      scriptKey={script.key}
+                      source={script.source}
+                      sourceLocale={snippet.localization.locale}
+                    />
+                  ) : (
+                    <pre>
+                      <code>{script.source}</code>
+                    </pre>
+                  )}
+                </article>
+              ))}
+            </div>
+          </section>
+
+          {snippet.localization.bodyMarkdown ? (
+            <section className="prose-section">
+              <p className="eyebrow">{messages.detail.about}</p>
+              <h2>{messages.detail.about}</h2>
+              <div className="prose-body">
+                {bodyParagraphs(snippet.localization.bodyMarkdown).map(
+                  (paragraph, index) => (
+                    <p key={index}>{paragraph}</p>
+                  ),
                 )}
-              </article>
-            ))}
-          </div>
-        </section>
+              </div>
+            </section>
+          ) : null}
+        </div>
 
         <aside className="detail-sidebar">
           <section>
@@ -224,20 +239,6 @@ export default function SnippetDetail({ loaderData }: Route.ComponentProps) {
           ) : null}
         </aside>
       </div>
-
-      {snippet.localization.bodyMarkdown ? (
-        <section className="prose-section">
-          <p className="eyebrow">{messages.detail.about}</p>
-          <h2>{messages.detail.about}</h2>
-          <div className="prose-body">
-            {bodyParagraphs(snippet.localization.bodyMarkdown).map(
-              (paragraph, index) => (
-                <p key={index}>{paragraph}</p>
-              ),
-            )}
-          </div>
-        </section>
-      ) : null}
     </main>
   );
 }
