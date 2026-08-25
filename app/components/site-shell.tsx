@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Link, NavLink, useLocation } from "react-router";
 
 import type { Messages } from "../i18n/messages";
@@ -28,6 +29,24 @@ export function SiteHeader({
 }) {
   const location = useLocation();
   const localeSegment = toLocaleSegment(locale);
+  const localeSwitcherRef = useRef<HTMLDetailsElement>(null);
+
+  useEffect(() => {
+    function closeLocaleSwitcher(event: MouseEvent) {
+      const localeSwitcher = localeSwitcherRef.current;
+
+      if (
+        localeSwitcher?.open &&
+        event.target instanceof Node &&
+        !localeSwitcher.contains(event.target)
+      ) {
+        localeSwitcher.open = false;
+      }
+    }
+
+    document.addEventListener("click", closeLocaleSwitcher);
+    return () => document.removeEventListener("click", closeLocaleSwitcher);
+  }, []);
 
   return (
     <header className="site-header">
@@ -53,7 +72,7 @@ export function SiteHeader({
           </NavLink>
         </nav>
 
-        <details className="locale-switcher">
+        <details className="locale-switcher" ref={localeSwitcherRef}>
           <summary aria-label={messages.navigation.language}>
             <span aria-hidden="true">◎</span>
             <span>{localeLabels[locale]}</span>
