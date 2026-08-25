@@ -102,20 +102,8 @@ export default function SnippetDetail({ loaderData }: Route.ComponentProps) {
 
   return (
     <main className="detail-page">
-      <Link className="back-link" to={`/${localeSegment}/snippets`}>
-        <span aria-hidden="true">←</span> {messages.detail.back}
-      </Link>
-
       <header className="detail-header">
         <div>
-          <div className="detail-kicker-row">
-            <span className="snippet-glyph" aria-hidden="true">
-              ◆
-            </span>
-            <span>
-              {messages.detail.revision} {snippet.revision.number}
-            </span>
-          </div>
           <h1>{snippet.localization.title}</h1>
           <p>{snippet.localization.summary}</p>
         </div>

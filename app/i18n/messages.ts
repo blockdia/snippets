@@ -60,7 +60,6 @@ const en = {
     symbols: "Variables and symbols",
     references: "References",
     tags: "Tags",
-    revision: "Revision",
     translationFallbackTitle: "This snippet is not translated yet",
     translationFallbackDescription:
       "You are viewing the English content while the requested translation is unavailable or being updated.",
@@ -158,7 +157,6 @@ const zhCN: Messages = {
     symbols: "变量与符号",
     references: "参考资料",
     tags: "标签",
-    revision: "版本",
     translationFallbackTitle: "这个片段还没有可用的中文翻译",
     translationFallbackDescription:
       "当前显示英文内容；中文翻译可能尚未创建，或正在适配新的代码版本。",
@@ -247,7 +245,6 @@ const zhTW: Messages = {
     symbols: "變數與符號",
     references: "參考資料",
     tags: "標籤",
-    revision: "版本",
     translationFallbackTitle: "這個片段還沒有可用的中文翻譯",
     translationFallbackDescription:
       "目前顯示英文內容；中文翻譯可能尚未建立，或正在配合新的程式版本。",

@@ -928,16 +928,6 @@ html[data-theme="dark"] .theme-icon-moon {
   padding: 54px 0 112px;
 }
 
-.back-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: #716780;
-  font-size: 0.84rem;
-  font-weight: 720;
-  text-decoration: none;
-}
-
 .detail-header {
   display: flex;
   align-items: end;
@@ -948,18 +938,6 @@ html[data-theme="dark"] .theme-icon-moon {
 
 .detail-header > div:first-child {
   max-width: 780px;
-}
-
-.detail-kicker-row {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  margin-bottom: 20px;
-  color: #7a708b;
-  font-size: 0.74rem;
-  font-weight: 780;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
 }
 
 .detail-header h1 {
@@ -1562,9 +1540,7 @@ html[data-theme="dark"] .search-tag-field select {
 html[data-theme="dark"] .search-icon,
 html[data-theme="dark"] .search-query-field input::placeholder,
 html[data-theme="dark"] .search-summary,
-html[data-theme="dark"] .page-count,
-html[data-theme="dark"] .back-link,
-html[data-theme="dark"] .detail-kicker-row {
+html[data-theme="dark"] .page-count {
   color: #9e96ad;
 }
 
