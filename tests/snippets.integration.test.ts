@@ -18,6 +18,7 @@ import {
 import { computeTranslationBasisHash } from "../app/domain/translation-basis";
 import {
   PublicationError,
+  listPublishedSnippets,
   publishLocalizationRevision,
   publishSnippetRevision,
   resolvePublishedSnippet,
@@ -164,6 +165,11 @@ describe("snippet publication model", () => {
     expect(fallback?.localization.fallbackUsed).toBe(true);
     expect(fallback?.scripts[0]?.source).toContain("green flag");
 
+    const fallbackCards = await listPublishedSnippets(db, "zh-CN");
+    expect(fallbackCards.filter((card) => card.id === seed.snippetId)).toEqual([
+      expect.objectContaining({ locale: "en", fallbackUsed: true }),
+    ]);
+
     const chineseRevisionId = await seedChineseLocalization(
       db,
       seed,
@@ -181,6 +187,11 @@ describe("snippet publication model", () => {
       localized: true,
       source: "当绿旗被点击\n说 [你好]",
     });
+
+    const localizedCards = await listPublishedSnippets(db, "zh-CN");
+    expect(localizedCards.filter((card) => card.id === seed.snippetId)).toEqual(
+      [expect.objectContaining({ locale: "zh-CN", fallbackUsed: false })],
+    );
 
     const documents = await db
       .select()

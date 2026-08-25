@@ -99,11 +99,15 @@ the initial implementation.
 
 ### Phase 2 — SSR product surface
 
-- Add locale-prefix routing and canonical redirects.
-- Implement the snippet index, snippet detail, not-found/fallback states, SEO
-  metadata, and localized UI messages.
-- Port only the necessary visual language and responsive interaction patterns
-  from the legacy product.
+- [x] Add locale-prefix routing, `Accept-Language` negotiation, canonical locale
+      redirects, and canonical BCP 47 document language values.
+- [x] Implement the SSR home, snippet index, snippet detail,
+      not-found/translation-fallback states, cache headers, SEO metadata, and
+      localized UI messages.
+- [x] Resolve listing cards with one row per snippet, requested-locale priority,
+      and English-only fallback.
+- [x] Port the useful visual language into an accessible responsive shell
+      without carrying over the legacy SSG structure.
 
 ### Phase 3 — scratchblocks and search
 

@@ -17,6 +17,8 @@ The target architecture and phased implementation plan are documented in
 
 The D1 entities and publication invariants are documented in
 [`docs/architecture/content-domain.md`](./docs/architecture/content-domain.md).
+Locale routing, SSR page behavior, and fallback rules are documented in
+[`docs/architecture/ssr-routing.md`](./docs/architecture/ssr-routing.md).
 
 ## Local development
 

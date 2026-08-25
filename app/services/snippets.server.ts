@@ -19,7 +19,11 @@ import {
   tags,
 } from "../db/schema";
 import { computeTranslationBasisHash } from "../domain/translation-basis";
-import { CONTENT_FALLBACK_LOCALE, type Locale } from "../i18n/locales";
+import {
+  CONTENT_FALLBACK_LOCALE,
+  canonicalizeLocale,
+  type Locale,
+} from "../i18n/locales";
 
 type SearchDocumentInsert = typeof searchDocuments.$inferInsert;
 
@@ -115,6 +119,75 @@ export interface PublishedSnippet {
     position: number;
   }[];
   tagSlugs: string[];
+  availableLocales: Locale[];
+}
+
+export interface PublishedSnippetCard {
+  id: string;
+  slug: string;
+  requestedLocale: Locale;
+  locale: Locale;
+  fallbackUsed: boolean;
+  title: string;
+  summary: string;
+  updatedAt: string;
+}
+
+export async function listPublishedSnippets(
+  db: AppDatabase,
+  requestedLocale: Locale,
+  options: { limit?: number; offset?: number } = {},
+): Promise<PublishedSnippetCard[]> {
+  const limit = Math.min(Math.max(options.limit ?? 24, 1), 100);
+  const offset = Math.max(options.offset ?? 0, 0);
+
+  const rows = await db.all<{
+    id: string;
+    slug: string;
+    locale: string;
+    title: string;
+    summary: string;
+    updatedAt: string;
+  }>(sql`
+    SELECT
+      sd.snippet_id AS id,
+      s.slug AS slug,
+      sd.locale AS locale,
+      sd.title AS title,
+      sd.summary AS summary,
+      sd.updated_at AS updatedAt
+    FROM ${searchDocuments} AS sd
+    INNER JOIN ${snippets} AS s ON s.id = sd.snippet_id
+    WHERE s.status = 'active'
+      AND (
+        sd.locale = ${requestedLocale}
+        OR (
+          sd.locale = ${CONTENT_FALLBACK_LOCALE}
+          AND NOT EXISTS (
+            SELECT 1
+            FROM ${searchDocuments} AS preferred
+            WHERE preferred.snippet_id = sd.snippet_id
+              AND preferred.locale = ${requestedLocale}
+          )
+        )
+      )
+    ORDER BY sd.updated_at DESC, sd.snippet_id ASC
+    LIMIT ${limit} OFFSET ${offset}
+  `);
+
+  return rows.flatMap((row) => {
+    const locale = canonicalizeLocale(row.locale);
+    return locale
+      ? [
+          {
+            ...row,
+            requestedLocale,
+            locale,
+            fallbackUsed: locale !== requestedLocale,
+          },
+        ]
+      : [];
+  });
 }
 
 export async function publishSnippetRevision(
@@ -478,7 +551,7 @@ export async function resolvePublishedSnippet(
     return null;
   }
 
-  const [scriptRows, unitRows, symbols, references, tagRows] =
+  const [scriptRows, unitRows, symbols, references, tagRows, localeRows] =
     await Promise.all([
       db
         .select({
@@ -558,6 +631,34 @@ export async function resolvePublishedSnippet(
         .innerJoin(tags, eq(tags.id, snippetRevisionTags.tagId))
         .where(eq(snippetRevisionTags.revisionId, content.revisionId))
         .orderBy(asc(snippetRevisionTags.position)),
+      db
+        .select({ locale: snippetLocalizations.locale })
+        .from(snippetLocalizations)
+        .innerJoin(
+          snippetLocalizationPublications,
+          eq(
+            snippetLocalizationPublications.localizationId,
+            snippetLocalizations.id,
+          ),
+        )
+        .innerJoin(
+          snippetLocalizationRevisions,
+          eq(
+            snippetLocalizationRevisions.id,
+            snippetLocalizationPublications.localizationRevisionId,
+          ),
+        )
+        .where(
+          and(
+            eq(snippetLocalizations.snippetId, content.snippetId),
+            eq(snippetLocalizationRevisions.status, "published"),
+            eq(
+              snippetLocalizationRevisions.translationBasisHash,
+              content.basis,
+            ),
+          ),
+        )
+        .orderBy(asc(snippetLocalizations.locale)),
     ]);
 
   const resolvedLocale = content.locale as Locale;
@@ -595,6 +696,10 @@ export async function resolvePublishedSnippet(
     symbols,
     references,
     tagSlugs: tagRows.map((tag) => tag.slug),
+    availableLocales: localeRows.flatMap((row) => {
+      const locale = canonicalizeLocale(row.locale);
+      return locale ? [locale] : [];
+    }),
   };
 }
 

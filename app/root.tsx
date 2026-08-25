@@ -5,14 +5,21 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLocation,
 } from "react-router";
 
 import type { Route } from "./+types/root";
+import { canonicalizeLocale, CONTENT_FALLBACK_LOCALE } from "./i18n/locales";
 import "./app.css";
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const location = useLocation();
+  const locale =
+    canonicalizeLocale(location.pathname.split("/")[1] ?? "") ??
+    CONTENT_FALLBACK_LOCALE;
+
   return (
-    <html lang="en">
+    <html lang={locale}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
