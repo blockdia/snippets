@@ -1,13 +1,12 @@
 import { useEffect, useId, useRef, useState } from "react";
 
-import type {
-  Document,
-  DocumentView,
-  LanguageData,
-  ScratchblocksAPI,
-} from "scratchblocks-plus";
+import type { Document, DocumentView } from "scratchblocks-plus";
 
 import { SUPPORTED_LOCALES, type Locale } from "../i18n/locales";
+import {
+  ensureScratchblocksLanguage,
+  loadScratchblocksApi,
+} from "./scratchblocks-api";
 
 type ScratchblocksStyle =
   "scratch3" | "scratch3-high-contrast" | "scratch3-outline" | "scratch2";
@@ -27,54 +26,11 @@ export interface ScratchblocksLabels {
   outline: string;
 }
 
-const languageCodes: Record<Locale, string> = {
-  en: "en",
-  "zh-CN": "zh_cn",
-  "zh-TW": "zh_tw",
-};
-
 const languageLabels: Record<Locale, string> = {
   en: "English",
   "zh-CN": "简体中文",
   "zh-TW": "繁體中文",
 };
-
-let apiPromise: Promise<ScratchblocksAPI> | undefined;
-let stylesAppended = false;
-const loadedLanguages = new Set<string>(["en"]);
-
-async function loadApi(): Promise<ScratchblocksAPI> {
-  if (import.meta.env.SSR) {
-    throw new Error("scratchblocks rendering is available in the browser only");
-  }
-  apiPromise ??= import("scratchblocks-plus").then((module) => module.default);
-  const api = await apiPromise;
-  if (!stylesAppended) {
-    api.appendStyles();
-    stylesAppended = true;
-  }
-  return api;
-}
-
-async function ensureLanguage(
-  api: ScratchblocksAPI,
-  locale: Locale,
-): Promise<string> {
-  const code = languageCodes[locale];
-  if (loadedLanguages.has(code)) return code;
-
-  let language: unknown;
-  if (!import.meta.env.SSR && locale === "zh-CN") {
-    language = (await import("scratchblocks-plus/locales/zh-cn.json")).default;
-  } else if (!import.meta.env.SSR && locale === "zh-TW") {
-    language = (await import("scratchblocks-plus/locales/zh-tw.json")).default;
-  }
-  if (language) {
-    api.loadLanguages({ [code]: language as LanguageData });
-    loadedLanguages.add(code);
-  }
-  return code;
-}
 
 async function copyText(text: string): Promise<boolean> {
   try {
@@ -152,12 +108,12 @@ export function ScratchblocksRenderer({
 
     void (async () => {
       try {
-        const api = await loadApi();
-        const sourceCode = await ensureLanguage(api, sourceLocale);
+        const api = await loadScratchblocksApi();
+        const sourceCode = await ensureScratchblocksLanguage(api, sourceLocale);
         const targetCode =
           translation === "original"
             ? sourceCode
-            : await ensureLanguage(api, translation);
+            : await ensureScratchblocksLanguage(api, translation);
         const doc = api.parse(source, { languages: [sourceCode, "en"] });
         const targetLanguage = api.allLanguages[targetCode];
         if (targetLanguage && targetCode !== sourceCode) {

@@ -414,8 +414,9 @@ summary {
 
 .snippet-card {
   display: flex;
-  min-height: 132px;
-  padding: 16px;
+  min-height: 284px;
+  overflow: hidden;
+  padding: 0;
   border: 1px solid var(--line);
   border-radius: 16px;
   background: var(--paper);
@@ -441,9 +442,54 @@ summary {
   outline-offset: 3px;
 }
 
+.snippet-card-preview {
+  display: grid;
+  min-height: 144px;
+  max-height: 176px;
+  aspect-ratio: 2 / 1;
+  overflow: hidden;
+  border-bottom: 1px solid rgb(72 50 126 / 8%);
+  background:
+    radial-gradient(circle, rgb(115 81 207 / 12%) 1px, transparent 1px),
+    linear-gradient(145deg, #faf9fe, #f2effa);
+  background-position:
+    0 0,
+    0 0;
+  background-size:
+    18px 18px,
+    auto;
+  place-items: center;
+}
+
+.snippet-card-preview-canvas {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  padding: 18px 18px 0;
+  place-items: start center;
+}
+
+.snippet-card-preview svg {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  filter: drop-shadow(0 9px 11px rgb(49 34 90 / 12%));
+  transform-origin: top center;
+  transition: transform 180ms ease;
+}
+
+.snippet-card:hover .snippet-card-preview svg,
+.snippet-card:focus-visible .snippet-card-preview svg {
+  transform: translateY(-2px) scale(1.015);
+}
+
 .snippet-card-content {
   display: flex;
   flex: 1;
+  min-height: 132px;
+  padding: 16px;
   flex-direction: column;
 }
 
@@ -1333,6 +1379,10 @@ summary {
     min-height: 0;
   }
 
+  .snippet-card-preview {
+    max-height: 190px;
+  }
+
   .detail-page {
     padding: 38px 0 82px;
   }
@@ -1431,6 +1481,10 @@ summary {
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
+  }
+
+  .snippet-card-preview svg {
+    transition: none;
   }
 
   *,

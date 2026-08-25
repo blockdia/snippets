@@ -248,7 +248,11 @@ describe("snippet publication model", () => {
 
     const fallbackCards = await listPublishedSnippets(db, "zh-CN");
     expect(fallbackCards.filter((card) => card.id === seed.snippetId)).toEqual([
-      expect.objectContaining({ locale: "en", fallbackUsed: true }),
+      expect.objectContaining({
+        locale: "en",
+        fallbackUsed: true,
+        previewSource: "when green flag clicked\nsay [hello]",
+      }),
     ]);
 
     const chineseRevisionId = await seedChineseLocalization(
@@ -271,7 +275,13 @@ describe("snippet publication model", () => {
 
     const localizedCards = await listPublishedSnippets(db, "zh-CN");
     expect(localizedCards.filter((card) => card.id === seed.snippetId)).toEqual(
-      [expect.objectContaining({ locale: "zh-CN", fallbackUsed: false })],
+      [
+        expect.objectContaining({
+          locale: "zh-CN",
+          fallbackUsed: false,
+          previewSource: "当绿旗被点击\n说 [你好]",
+        }),
+      ],
     );
 
     const documents = await db

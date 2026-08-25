@@ -133,6 +133,7 @@ export interface PublishedSnippetCard {
   title: string;
   summary: string;
   updatedAt: string;
+  previewSource: string | null;
 }
 
 export interface SearchResultPage {
@@ -171,6 +172,7 @@ export async function searchPublishedSnippets(
     title: string;
     summary: string;
     updatedAt: string;
+    previewSource: string | null;
     rank: number;
   };
   type CountRow = { total: number };
@@ -189,6 +191,21 @@ export async function searchPublishedSnippets(
             AND preferred.locale = ${requestedLocale}
         )
       )
+  `;
+
+  const previewSource = sql`
+    (
+      SELECT coalesce(localized_preview.source, source_preview.source)
+      FROM ${snippetPublications} AS preview_publication
+      INNER JOIN ${snippetRevisionScripts} AS source_preview
+        ON source_preview.revision_id = preview_publication.revision_id
+      LEFT JOIN ${snippetLocalizationRevisionScripts} AS localized_preview
+        ON localized_preview.localization_revision_id = sd.localization_revision_id
+        AND localized_preview.script_key = source_preview.script_key
+      WHERE preview_publication.snippet_id = sd.snippet_id
+      ORDER BY source_preview.position ASC
+      LIMIT 1
+    )
   `;
 
   const tagPredicate = sql`
@@ -217,6 +234,7 @@ export async function searchPublishedSnippets(
           sd.title AS title,
           sd.summary AS summary,
           sd.updated_at AS updatedAt,
+          ${previewSource} AS previewSource,
           bm25(snippet_search_fts, 8.0, 4.0, 1.0, 3.0, 2.0) AS rank
         FROM snippet_search_fts
         INNER JOIN eligible ON eligible.document_id = snippet_search_fts.rowid
@@ -250,6 +268,7 @@ export async function searchPublishedSnippets(
           sd.title AS title,
           sd.summary AS summary,
           sd.updated_at AS updatedAt,
+          ${previewSource} AS previewSource,
           0 AS rank
         FROM eligible
         INNER JOIN ${searchDocuments} AS sd ON sd.id = eligible.document_id
@@ -283,6 +302,7 @@ export async function searchPublishedSnippets(
             title: row.title,
             summary: row.summary,
             updatedAt: row.updatedAt,
+            previewSource: row.previewSource,
             rank: row.rank,
           },
         ]
@@ -329,6 +349,7 @@ export async function listPublishedSnippets(
     title: string;
     summary: string;
     updatedAt: string;
+    previewSource: string | null;
   }>(sql`
     SELECT
       sd.snippet_id AS id,
@@ -336,7 +357,19 @@ export async function listPublishedSnippets(
       sd.locale AS locale,
       sd.title AS title,
       sd.summary AS summary,
-      sd.updated_at AS updatedAt
+      sd.updated_at AS updatedAt,
+      (
+        SELECT coalesce(localized_preview.source, source_preview.source)
+        FROM ${snippetPublications} AS preview_publication
+        INNER JOIN ${snippetRevisionScripts} AS source_preview
+          ON source_preview.revision_id = preview_publication.revision_id
+        LEFT JOIN ${snippetLocalizationRevisionScripts} AS localized_preview
+          ON localized_preview.localization_revision_id = sd.localization_revision_id
+          AND localized_preview.script_key = source_preview.script_key
+        WHERE preview_publication.snippet_id = sd.snippet_id
+        ORDER BY source_preview.position ASC
+        LIMIT 1
+      ) AS previewSource
     FROM ${searchDocuments} AS sd
     INNER JOIN ${snippets} AS s ON s.id = sd.snippet_id
     WHERE s.status = 'active'

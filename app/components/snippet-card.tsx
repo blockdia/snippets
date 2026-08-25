@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import type { Messages } from "../i18n/messages";
 import { toLocaleSegment, type Locale } from "../i18n/locales";
 import type { PublishedSnippetCard } from "../services/snippets.server";
+import { ScratchblocksCardPreview } from "./scratchblocks-card-preview";
 
 export function SnippetCard({
   card,
@@ -18,6 +19,12 @@ export function SnippetCard({
       className="snippet-card"
       to={`/${toLocaleSegment(locale)}/snippets/${card.slug}`}
     >
+      <div aria-hidden="true" className="snippet-card-preview">
+        <ScratchblocksCardPreview
+          source={card.previewSource}
+          sourceLocale={card.locale}
+        />
+      </div>
       <article className="snippet-card-content">
         {card.fallbackUsed ? (
           <div className="snippet-card-topline">
