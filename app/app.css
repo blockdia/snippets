@@ -470,6 +470,15 @@ summary {
   place-items: start center;
 }
 
+.snippet-card-preview-motion {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: start center;
+  transform: translate3d(0, var(--snippet-preview-scroll-y, 0), 0);
+  will-change: transform;
+}
+
 .snippet-card-preview svg {
   display: block;
   width: auto;
@@ -1485,6 +1494,10 @@ summary {
 
   .snippet-card-preview svg {
     transition: none;
+  }
+
+  .snippet-card-preview-motion {
+    transform: none;
   }
 
   *,
