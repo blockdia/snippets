@@ -1203,7 +1203,10 @@ export async function resolvePublishedSnippet(
             byteSize: demoRows[0].byteSize,
             sha256: demoRows[0].sha256,
             license: demoRows[0].license,
-            attribution: demoRows[0].attribution,
+            attribution:
+              demoRows[0].attribution === "Legacy module contributors"
+                ? null
+                : demoRows[0].attribution,
           }
         : null,
     scripts: scriptRows.map(({ metadata, ...script }) => {

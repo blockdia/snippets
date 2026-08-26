@@ -23,7 +23,6 @@ export function SnippetDemo({
   downloadName: string;
   fileDescription: string;
   labels: {
-    description: string;
     load: string;
     open: string;
     download: string;
@@ -52,15 +51,16 @@ export function SnippetDemo({
           title={labels.frameTitle}
         />
       ) : (
-        <div className="demo-placeholder">
+        <button
+          className="demo-placeholder"
+          onClick={() => setLoaded(true)}
+          type="button"
+        >
           <span aria-hidden="true" className="demo-placeholder-icon">
             ▶
           </span>
-          <p>{labels.description}</p>
-          <button onClick={() => setLoaded(true)} type="button">
-            {labels.load}
-          </button>
-        </div>
+          <span className="demo-load-label">{labels.load}</span>
+        </button>
       )}
       <div className="demo-toolbar">
         <span>{fileDescription}</span>

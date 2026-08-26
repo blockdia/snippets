@@ -47,6 +47,7 @@ export function ShareButton({
 
   return (
     <button
+      aria-label={label}
       className={`detail-share-button ${state}`}
       onClick={async () => {
         if (navigator.share) {
@@ -65,7 +66,7 @@ export function ShareButton({
       type="button"
     >
       <span aria-hidden="true">↗</span>
-      {label}
+      <span className="share-button-label">{label}</span>
     </button>
   );
 }

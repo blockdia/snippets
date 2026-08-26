@@ -273,7 +273,7 @@ WHERE NOT EXISTS (
             number(snippet.artifact.byteSize),
             text(snippet.artifact.sha256),
             text("CC-BY-4.0"),
-            text("Legacy module contributors"),
+            text(null),
             text(importedAt),
           ],
           "id",

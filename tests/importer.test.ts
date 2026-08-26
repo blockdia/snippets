@@ -187,9 +187,9 @@ describe("legacy importer", () => {
     ).toBe(4);
     expect(
       await env.DB.prepare(
-        "SELECT storage FROM artifacts WHERE artifact_key = 'demo'",
-      ).first<{ storage: string }>(),
-    ).toEqual({ storage: "r2" });
+        "SELECT storage, attribution FROM artifacts WHERE artifact_key = 'demo'",
+      ).first<{ storage: string; attribution: string | null }>(),
+    ).toEqual({ storage: "r2", attribution: null });
 
     const db = createDatabase(env.DB);
     const resolved = await resolvePublishedSnippet(db, "consumer", "zh-CN");
