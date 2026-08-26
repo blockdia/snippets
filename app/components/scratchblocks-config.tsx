@@ -36,7 +36,6 @@ interface ScratchblocksConfigContextValue extends ScratchblocksConfig {
 }
 
 const STORAGE_KEY = "scratch-snippets-scratchblocks-config";
-const LEGACY_STYLE_STORAGE_KEY = "scratchblocks-style";
 const DEFAULT_CONFIG: ScratchblocksConfig = {
   catHats: false,
   scale: 1,
@@ -86,10 +85,7 @@ function readStoredConfig(): ScratchblocksConfig {
       }
     }
 
-    const legacyStyle = window.localStorage.getItem(LEGACY_STYLE_STORAGE_KEY);
-    return isStyle(legacyStyle)
-      ? { ...DEFAULT_CONFIG, style: legacyStyle }
-      : DEFAULT_CONFIG;
+    return DEFAULT_CONFIG;
   } catch {
     return DEFAULT_CONFIG;
   }

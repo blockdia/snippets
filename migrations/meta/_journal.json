@@ -8,6 +8,13 @@
       "when": 1787632979145,
       "tag": "0000_dear_shadowcat",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1787738782169,
+      "tag": "0001_thin_purifiers",
+      "breakpoints": true
     }
   ]
 }

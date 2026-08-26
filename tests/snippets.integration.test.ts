@@ -425,33 +425,6 @@ describe("snippet publication model", () => {
     });
   });
 
-  it("does not expose legacy static SB3 artifacts", async () => {
-    const db = createDatabase(env.DB);
-    const seed = await seedSnippet(db, crypto.randomUUID());
-
-    await db.insert(artifacts).values({
-      id: `artifact-${crypto.randomUUID()}`,
-      revisionId: seed.revisionId,
-      artifactKey: "demo",
-      kind: "sb3",
-      storage: "static",
-      storageKey: `examples/legacy/${seed.slug}/demo.sb3`,
-      contentType: "application/x.scratch.sb3",
-      byteSize: 4096,
-      sha256: "a".repeat(64),
-      license: "CC-BY-4.0",
-    });
-    await publishSnippetRevision(db, {
-      snippetId: seed.snippetId,
-      revisionId: seed.revisionId,
-      englishLocalizationRevisionId: seed.englishRevisionId,
-    });
-
-    await expect(
-      resolvePublishedSnippet(db, seed.slug, "en"),
-    ).resolves.toMatchObject({ demo: null });
-  });
-
   it("exposes imported script provenance and only links published sources", async () => {
     const db = createDatabase(env.DB);
     const source = await seedSnippet(db, crypto.randomUUID());

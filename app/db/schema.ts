@@ -698,7 +698,7 @@ export const artifacts = sqliteTable(
       .references(() => snippetRevisions.id, { onDelete: "cascade" }),
     artifactKey: text("artifact_key").notNull(),
     kind: text("kind", { enum: ["sb3", "image", "attachment"] }).notNull(),
-    storage: text("storage", { enum: ["static", "r2"] }).notNull(),
+    storage: text("storage", { enum: ["r2"] }).notNull(),
     storageKey: text("storage_key").notNull(),
     contentType: text("content_type").notNull(),
     byteSize: integer("byte_size").notNull(),
@@ -714,7 +714,7 @@ export const artifacts = sqliteTable(
       "artifacts_kind_valid",
       sql`${table.kind} IN ('sb3', 'image', 'attachment')`,
     ),
-    check("artifacts_storage_valid", sql`${table.storage} IN ('static', 'r2')`),
+    check("artifacts_storage_valid", sql`${table.storage} = 'r2'`),
     check("artifacts_size_nonnegative", sql`${table.byteSize} >= 0`),
     check(
       "artifacts_integrity_not_empty",

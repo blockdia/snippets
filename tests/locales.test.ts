@@ -4,7 +4,6 @@ import {
   CONTENT_FALLBACK_LOCALE,
   canonicalizeLocale,
   negotiateLocale,
-  parseLocaleSegment,
   toLocaleSegment,
 } from "../app/i18n/locales";
 
@@ -15,8 +14,8 @@ describe("locale model", () => {
 
   it("canonicalizes supported BCP 47 locales", () => {
     expect(canonicalizeLocale("EN")).toBe("en");
-    expect(parseLocaleSegment("zh-cn")).toBe("zh-CN");
-    expect(parseLocaleSegment("zh-TW")).toBe("zh-TW");
+    expect(canonicalizeLocale("zh-cn")).toBe("zh-CN");
+    expect(canonicalizeLocale("zh-TW")).toBe("zh-TW");
   });
 
   it("rejects unsupported or malformed locales", () => {

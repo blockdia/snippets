@@ -9,13 +9,12 @@ const requestHandler = createRequestHandler(
 );
 
 export default {
-  async fetch(request, env, executionContext) {
+  async fetch(request, env) {
     const context = new RouterContextProvider();
 
     context.set(platformContext, {
       db: createDatabase(env.DB),
       env,
-      executionContext,
     });
 
     return requestHandler(request, context);

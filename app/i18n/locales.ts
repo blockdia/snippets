@@ -17,10 +17,6 @@ export function canonicalizeLocale(value: string): Locale | null {
   }
 }
 
-export function parseLocaleSegment(segment: string): Locale | null {
-  return canonicalizeLocale(segment);
-}
-
 export function toLocaleSegment(locale: Locale): string {
   return locale.toLowerCase();
 }

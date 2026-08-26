@@ -26,8 +26,7 @@ const en = {
     description:
       "Each snippet is versioned, translated independently, and designed to be reused.",
     emptyTitle: "The library is ready for its first snippets",
-    emptyDescription:
-      "Content will appear here after the legacy importer runs in a later phase.",
+    emptyDescription: "No snippets have been published yet.",
     previous: "Previous",
     next: "Next",
   },
@@ -172,7 +171,7 @@ const zhCN: Messages = {
     title: "找到一个模式，理解它，再把它变成自己的作品。",
     description: "每个片段都有版本历史，内容与翻译可以独立演进。",
     emptyTitle: "代码库已经准备好迎接第一批内容",
-    emptyDescription: "后续阶段运行旧内容导入器后，代码片段会显示在这里。",
+    emptyDescription: "目前还没有已发布的代码片段。",
     previous: "上一页",
     next: "下一页",
   },
@@ -305,7 +304,7 @@ const zhTW: Messages = {
     title: "找到一個模式，理解它，再把它變成自己的作品。",
     description: "每個片段都有版本歷史，內容與翻譯可以獨立演進。",
     emptyTitle: "程式庫已經準備好迎接第一批內容",
-    emptyDescription: "後續階段執行舊內容匯入器後，程式片段會顯示在這裡。",
+    emptyDescription: "目前還沒有已發布的程式片段。",
     previous: "上一頁",
     next: "下一頁",
   },
