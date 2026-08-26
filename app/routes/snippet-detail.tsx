@@ -3,6 +3,8 @@ import { data, isRouteErrorResponse, Link } from "react-router";
 import type { Route } from "./+types/snippet-detail";
 import { CopyButton } from "../components/copy-button";
 import { ScratchblocksRenderer } from "../components/scratchblocks-renderer";
+import { ShareButton } from "../components/share-button";
+import { SnippetDemo } from "../components/snippet-demo";
 import { SnippetToc, type SnippetTocItem } from "../components/snippet-toc";
 import { publicPageHeaders } from "../http/public-page";
 import { getMessages } from "../i18n/messages";
@@ -33,6 +35,7 @@ export async function loader({ context, params, request }: Route.LoaderArgs) {
   return {
     locale,
     snippet,
+    demoUrl: snippet.demo ? new URL(snippet.demo.path, origin).href : null,
     canonicalUrl: canonicalUrl(request, path),
     alternateUrls: snippet.availableLocales.map((availableLocale) => ({
       locale: availableLocale,
@@ -129,6 +132,12 @@ function formatDate(value: string, locale: string): string {
   }).format(date);
 }
 
+function formatFileSize(bytes: number, locale: string): string {
+  const value = bytes >= 1024 * 1024 ? bytes / (1024 * 1024) : bytes / 1024;
+  const unit = bytes >= 1024 * 1024 ? "MB" : "KB";
+  return `${new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(value)} ${unit}`;
+}
+
 const LICENSE_URLS: Record<string, string> = {
   "CC0-1.0": "https://creativecommons.org/publicdomain/zero/1.0/",
   "CC-BY-4.0": "https://creativecommons.org/licenses/by/4.0/",
@@ -165,6 +174,7 @@ export default function SnippetDetail({ loaderData }: Route.ComponentProps) {
             ],
       ),
     },
+    ...(snippet.demo ? [{ id: "demo", label: messages.detail.demo }] : []),
     ...(snippet.symbols.length
       ? [{ id: "symbols", label: messages.detail.symbols }]
       : []),
@@ -209,18 +219,31 @@ export default function SnippetDetail({ loaderData }: Route.ComponentProps) {
           <h1>{snippet.localization.title}</h1>
           <p>{snippet.localization.summary}</p>
         </div>
-        {snippet.tagSlugs.length ? (
-          <div className="tag-list" aria-label={messages.detail.tags}>
-            {snippet.tagSlugs.map((tag) => (
-              <Link
-                key={tag}
-                to={`/${localeSegment}/search?tag=${encodeURIComponent(tag)}`}
-              >
-                {tag}
-              </Link>
-            ))}
-          </div>
-        ) : null}
+        <div className="detail-header-tools">
+          <ShareButton
+            labels={{
+              share: messages.detail.share,
+              shared: messages.detail.shared,
+              copied: messages.detail.linkCopied,
+              failed: messages.detail.shareFailed,
+            }}
+            text={snippet.localization.summary}
+            title={snippet.localization.title}
+            url={loaderData.canonicalUrl}
+          />
+          {snippet.tagSlugs.length ? (
+            <div className="tag-list" aria-label={messages.detail.tags}>
+              {snippet.tagSlugs.map((tag) => (
+                <Link
+                  key={tag}
+                  to={`/${localeSegment}/search?tag=${encodeURIComponent(tag)}`}
+                >
+                  {tag}
+                </Link>
+              ))}
+            </div>
+          ) : null}
+        </div>
       </header>
 
       {snippet.localization.fallbackUsed ? (
@@ -426,6 +449,33 @@ export default function SnippetDetail({ loaderData }: Route.ComponentProps) {
               )}
             </div>
           </section>
+
+          {snippet.demo && loaderData.demoUrl ? (
+            <section className="demo-section detail-section" id="demo">
+              <div className="demo-section-heading">
+                <div>
+                  <p className="eyebrow">SB3</p>
+                  <h2>{messages.detail.demo}</h2>
+                </div>
+                <span className="demo-license">{snippet.demo.license}</span>
+              </div>
+              <SnippetDemo
+                demoUrl={loaderData.demoUrl}
+                downloadName={`${snippet.slug}-demo.sb3`}
+                fileDescription={`${messages.detail.demoFile} · ${formatFileSize(snippet.demo.byteSize, loaderData.locale)}`}
+                labels={{
+                  description: messages.detail.demoDescription,
+                  load: messages.detail.loadDemo,
+                  open: messages.detail.openInTurboWarp,
+                  download: messages.detail.downloadDemo,
+                  frameTitle: messages.detail.demoFrameTitle,
+                }}
+              />
+              {snippet.demo.attribution ? (
+                <p className="demo-attribution">{snippet.demo.attribution}</p>
+              ) : null}
+            </section>
+          ) : null}
 
           {snippet.symbols.length ? (
             <section className="detail-section symbols-section" id="symbols">

@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, inject, it } from "vitest";
 
 import { createDatabase, type AppDatabase } from "../app/db/client";
 import {
+  artifacts,
   contributors,
   searchDocuments,
   snippetLocalizationRevisionContributors,
@@ -383,6 +384,43 @@ describe("snippet publication model", () => {
           roles: ["translator"],
         },
       ],
+    });
+  });
+
+  it("exposes a safe static SB3 demo from the published revision", async () => {
+    const db = createDatabase(env.DB);
+    const seed = await seedSnippet(db, crypto.randomUUID());
+
+    await db.insert(artifacts).values({
+      id: `artifact-${crypto.randomUUID()}`,
+      revisionId: seed.revisionId,
+      artifactKey: "demo",
+      kind: "sb3",
+      storage: "static",
+      storageKey: `examples/legacy/${seed.slug}/demo file.sb3`,
+      contentType: "application/x.scratch.sb3",
+      byteSize: 4096,
+      sha256: "a".repeat(64),
+      license: "CC-BY-4.0",
+      attribution: "Example project",
+    });
+    await publishSnippetRevision(db, {
+      snippetId: seed.snippetId,
+      revisionId: seed.revisionId,
+      englishLocalizationRevisionId: seed.englishRevisionId,
+    });
+
+    await expect(
+      resolvePublishedSnippet(db, seed.slug, "en"),
+    ).resolves.toMatchObject({
+      demo: {
+        path: `/examples/legacy/${seed.slug}/demo%20file.sb3`,
+        contentType: "application/x.scratch.sb3",
+        byteSize: 4096,
+        sha256: "a".repeat(64),
+        license: "CC-BY-4.0",
+        attribution: "Example project",
+      },
     });
   });
 

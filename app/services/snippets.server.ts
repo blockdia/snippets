@@ -3,6 +3,7 @@ import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import type { AppDatabase } from "../db/client";
 import type { SnippetRevisionScriptMetadata } from "../db/schema";
 import {
+  artifacts,
   contributors,
   searchDocuments,
   snippetLocalizationPublications,
@@ -52,6 +53,17 @@ function safePublicUrl(value: string | null): string | null {
   } catch {
     return null;
   }
+}
+
+function staticArtifactPath(storageKey: string): string | null {
+  const segments = storageKey.split("/");
+  if (
+    !segments.length ||
+    segments.some((segment) => !segment || segment === "." || segment === "..")
+  ) {
+    return null;
+  }
+  return `/${segments.map(encodeURIComponent).join("/")}`;
 }
 
 export type PublicationErrorCode =
@@ -124,6 +136,14 @@ export interface PublishedSnippet {
     profileUrl: string | null;
     roles: ("author" | "maintainer" | "source" | "translator" | "reviewer")[];
   }[];
+  demo: {
+    path: string;
+    contentType: string;
+    byteSize: number;
+    sha256: string;
+    license: string;
+    attribution: string | null;
+  } | null;
   scripts: {
     key: string;
     position: number;
@@ -867,6 +887,7 @@ export async function resolvePublishedSnippet(
     codeContributorRows,
     localizationContributorRows,
     publicationRows,
+    demoRows,
   ] = await Promise.all([
     db
       .select({
@@ -1016,6 +1037,25 @@ export async function resolvePublishedSnippet(
       })
       .from(snippetRevisions)
       .where(eq(snippetRevisions.snippetId, content.snippetId)),
+    db
+      .select({
+        storageKey: artifacts.storageKey,
+        contentType: artifacts.contentType,
+        byteSize: artifacts.byteSize,
+        sha256: artifacts.sha256,
+        license: artifacts.license,
+        attribution: artifacts.attribution,
+      })
+      .from(artifacts)
+      .where(
+        and(
+          eq(artifacts.revisionId, content.revisionId),
+          eq(artifacts.artifactKey, "demo"),
+          eq(artifacts.kind, "sb3"),
+          eq(artifacts.storage, "static"),
+        ),
+      )
+      .limit(1),
   ]);
 
   const contributorMap = new Map<
@@ -1125,6 +1165,9 @@ export async function resolvePublishedSnippet(
   }
 
   const resolvedLocale = content.locale as Locale;
+  const demoPath = demoRows[0]
+    ? staticArtifactPath(demoRows[0].storageKey)
+    : null;
   return {
     id: content.snippetId,
     slug: content.slug,
@@ -1160,6 +1203,17 @@ export async function resolvePublishedSnippet(
       prose: content.proseLicense,
     },
     contributors: [...contributorMap.values()],
+    demo:
+      demoRows[0] && demoPath
+        ? {
+            path: demoPath,
+            contentType: demoRows[0].contentType,
+            byteSize: demoRows[0].byteSize,
+            sha256: demoRows[0].sha256,
+            license: demoRows[0].license,
+            attribution: demoRows[0].attribution,
+          }
+        : null,
     scripts: scriptRows.map(({ metadata, ...script }) => {
       const importedFrom = importedSourceFromMetadata(metadata);
       const publishedSource = importedFrom

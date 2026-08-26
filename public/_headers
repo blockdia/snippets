@@ -1,0 +1,3 @@
+# SB3 artifacts are public, but TurboWarp is their only cross-origin consumer.
+/examples/*.sb3
+  Access-Control-Allow-Origin: https://turbowarp.org
