@@ -1,7 +1,9 @@
 import { data, isRouteErrorResponse, Link } from "react-router";
 
 import type { Route } from "./+types/snippet-detail";
+import { CopyButton } from "../components/copy-button";
 import { ScratchblocksRenderer } from "../components/scratchblocks-renderer";
+import { SnippetToc, type SnippetTocItem } from "../components/snippet-toc";
 import { publicPageHeaders } from "../http/public-page";
 import { getMessages } from "../i18n/messages";
 import {
@@ -92,12 +94,88 @@ function bodyParagraphs(markdown: string): string[] {
     .filter(Boolean);
 }
 
+function scriptAnchorId(scriptKey: string): string {
+  let hash = 0;
+  for (const character of scriptKey) {
+    hash = (hash * 31 + character.charCodeAt(0)) >>> 0;
+  }
+  const readable = scriptKey
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 48);
+  return `script-${readable || "item"}-${hash.toString(36)}`;
+}
+
+function translatedEnum(values: Record<string, string>, value: string): string {
+  return values[value] ?? value;
+}
+
 export default function SnippetDetail({ loaderData }: Route.ComponentProps) {
   const messages = getMessages(loaderData.locale);
   const { snippet } = loaderData;
+  const localeSegment = toLocaleSegment(loaderData.locale);
   const units = new Map(
     snippet.translationUnits.map((unit) => [unit.key, unit.text]),
   );
+  const scriptTitles = new Map(
+    snippet.scripts.map((script, index) => [
+      script.key,
+      units.get(`script:${script.key}:title`) ??
+        `${messages.detail.scriptUntitled} ${index + 1}`,
+    ]),
+  );
+  const tocItems: SnippetTocItem[] = [
+    {
+      id: "code",
+      label: messages.detail.code,
+      children: snippet.scripts.flatMap((script) =>
+        script.importedFrom
+          ? []
+          : [
+              {
+                id: scriptAnchorId(script.key),
+                label: scriptTitles.get(script.key) ?? script.key,
+              },
+            ],
+      ),
+    },
+    ...(snippet.symbols.length
+      ? [{ id: "symbols", label: messages.detail.symbols }]
+      : []),
+    ...(snippet.localization.bodyMarkdown
+      ? [{ id: "about", label: messages.detail.about }]
+      : []),
+    ...(snippet.references.length
+      ? [{ id: "references", label: messages.detail.references }]
+      : []),
+  ];
+
+  function renderScript(script: (typeof snippet.scripts)[number]) {
+    if (snippet.revision.representation === "scratchblocks") {
+      return (
+        <ScratchblocksRenderer
+          labels={{
+            copy: messages.detail.copyCode,
+            copied: messages.detail.copied,
+            copyFailed: messages.detail.copyFailed,
+            exportSvg: messages.detail.exportSvg,
+            exportPng: messages.detail.exportPng,
+            renderFailed: messages.detail.renderFailed,
+            codePreview: messages.detail.codePreview,
+          }}
+          scriptKey={script.key}
+          source={script.source}
+          sourceLocale={snippet.localization.locale}
+        />
+      );
+    }
+    return (
+      <pre>
+        <code>{script.source}</code>
+      </pre>
+    );
+  }
 
   return (
     <main className="detail-page">
@@ -109,7 +187,12 @@ export default function SnippetDetail({ loaderData }: Route.ComponentProps) {
         {snippet.tagSlugs.length ? (
           <div className="tag-list" aria-label={messages.detail.tags}>
             {snippet.tagSlugs.map((tag) => (
-              <span key={tag}>{tag}</span>
+              <Link
+                key={tag}
+                to={`/${localeSegment}/search?tag=${encodeURIComponent(tag)}`}
+              >
+                {tag}
+              </Link>
             ))}
           </div>
         ) : null}
@@ -128,66 +211,16 @@ export default function SnippetDetail({ loaderData }: Route.ComponentProps) {
       ) : null}
 
       <div className="detail-layout">
-        <div className="detail-content">
-          <section className="code-panel" aria-labelledby="code-heading">
-            <div className="panel-heading">
-              <div>
-                <p className="eyebrow">scratchblocks</p>
-                <h2 id="code-heading">{messages.detail.code}</h2>
-              </div>
-              <span className="representation-badge">
-                {snippet.revision.representation} v
-                {snippet.revision.representationVersion}
-              </span>
-            </div>
-            <div className="script-stack">
-              {snippet.scripts.map((script, index) => (
-                <article className="script-source" key={script.key}>
-                  <h3>
-                    {units.get(`script:${script.key}:title`) ??
-                      `${messages.detail.scriptUntitled} ${index + 1}`}
-                  </h3>
-                  {snippet.revision.representation === "scratchblocks" ? (
-                    <ScratchblocksRenderer
-                      labels={{
-                        copy: messages.detail.copyCode,
-                        copied: messages.detail.copied,
-                        copyFailed: messages.detail.copyFailed,
-                        exportSvg: messages.detail.exportSvg,
-                        exportPng: messages.detail.exportPng,
-                        renderFailed: messages.detail.renderFailed,
-                        codePreview: messages.detail.codePreview,
-                      }}
-                      scriptKey={script.key}
-                      source={script.source}
-                      sourceLocale={snippet.localization.locale}
-                    />
-                  ) : (
-                    <pre>
-                      <code>{script.source}</code>
-                    </pre>
-                  )}
-                </article>
-              ))}
-            </div>
+        <aside className="detail-sidebar">
+          <section>
+            <h2>{messages.detail.onThisPage}</h2>
+            <SnippetToc
+              items={tocItems}
+              label={messages.detail.onThisPage}
+              toggleLabel={messages.detail.toggleContents}
+            />
           </section>
 
-          {snippet.localization.bodyMarkdown ? (
-            <section className="prose-section">
-              <p className="eyebrow">{messages.detail.about}</p>
-              <h2>{messages.detail.about}</h2>
-              <div className="prose-body">
-                {bodyParagraphs(snippet.localization.bodyMarkdown).map(
-                  (paragraph, index) => (
-                    <p key={index}>{paragraph}</p>
-                  ),
-                )}
-              </div>
-            </section>
-          ) : null}
-        </div>
-
-        <aside className="detail-sidebar">
           <section>
             <h2>{messages.detail.availableLanguages}</h2>
             <div className="available-locales">
@@ -205,25 +238,146 @@ export default function SnippetDetail({ loaderData }: Route.ComponentProps) {
               ))}
             </div>
           </section>
+        </aside>
+
+        <div className="detail-content">
+          <section
+            className="code-panel detail-section"
+            id="code"
+            aria-labelledby="code-heading"
+          >
+            <div className="panel-heading">
+              <div>
+                <p className="eyebrow">scratchblocks</p>
+                <h2 id="code-heading">{messages.detail.code}</h2>
+              </div>
+              <span className="representation-badge">
+                {snippet.revision.representation} v
+                {snippet.revision.representationVersion}
+              </span>
+            </div>
+            <div className="script-stack">
+              {snippet.scripts.map((script) =>
+                script.importedFrom ? (
+                  <details className="imported-script" key={script.key}>
+                    <summary>
+                      <span className="imported-script-title">
+                        <small>{messages.detail.importedScript}</small>
+                        {scriptTitles.get(script.key)}
+                      </span>
+                      <span className="imported-script-source">
+                        {messages.detail.importedFrom}{" "}
+                        {script.importedFrom.sourceTitle ??
+                          script.importedFrom.moduleId}
+                      </span>
+                    </summary>
+                    <div className="imported-script-body">
+                      <p className="imported-script-provenance">
+                        <span>{messages.detail.importedFrom}</span>
+                        {script.importedFrom.sourceSlug ? (
+                          <Link
+                            to={`/${localeSegment}/snippets/${script.importedFrom.sourceSlug}`}
+                          >
+                            {script.importedFrom.sourceTitle ??
+                              script.importedFrom.moduleId}
+                          </Link>
+                        ) : (
+                          <strong>{script.importedFrom.moduleId}</strong>
+                        )}
+                        <code>{script.importedFrom.scriptId}</code>
+                      </p>
+                      {renderScript(script)}
+                    </div>
+                  </details>
+                ) : (
+                  <article
+                    className="script-source"
+                    id={scriptAnchorId(script.key)}
+                    key={script.key}
+                  >
+                    <h3>{scriptTitles.get(script.key)}</h3>
+                    {renderScript(script)}
+                  </article>
+                ),
+              )}
+            </div>
+          </section>
 
           {snippet.symbols.length ? (
-            <section>
+            <section className="detail-section symbols-section" id="symbols">
+              <p className="eyebrow">{messages.detail.symbols}</p>
               <h2>{messages.detail.symbols}</h2>
-              <ul className="metadata-list">
-                {snippet.symbols.map((symbol) => (
-                  <li key={symbol.key}>
-                    <span>{units.get(symbol.nameUnitKey) ?? symbol.key}</span>
-                    <small>
-                      {symbol.kind} · {symbol.scope}
-                    </small>
-                  </li>
-                ))}
-              </ul>
+              <div className="symbols-table-wrap">
+                <table className="symbols-table">
+                  <thead>
+                    <tr>
+                      <th>{messages.detail.symbolName}</th>
+                      <th>{messages.detail.symbolType}</th>
+                      <th>{messages.detail.symbolScope}</th>
+                      <th>
+                        <span className="visually-hidden">
+                          {messages.detail.copyName}
+                        </span>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {snippet.symbols.map((symbol) => {
+                      const name = units.get(symbol.nameUnitKey) ?? symbol.key;
+                      return (
+                        <tr key={symbol.key}>
+                          <th scope="row">{name}</th>
+                          <td>
+                            {translatedEnum(
+                              messages.detail.symbolKinds,
+                              symbol.kind,
+                            )}
+                          </td>
+                          <td>
+                            {translatedEnum(
+                              messages.detail.symbolScopes,
+                              symbol.scope,
+                            )}
+                          </td>
+                          <td>
+                            <CopyButton
+                              labels={{
+                                copy: messages.detail.copyName,
+                                copied: messages.detail.copied,
+                                failed: messages.detail.copyFailed,
+                              }}
+                              value={name}
+                            />
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          ) : null}
+
+          {snippet.localization.bodyMarkdown ? (
+            <section className="prose-section detail-section" id="about">
+              <p className="eyebrow">{messages.detail.about}</p>
+              <h2>{messages.detail.about}</h2>
+              <div className="prose-body">
+                {bodyParagraphs(snippet.localization.bodyMarkdown).map(
+                  (paragraph, index) => (
+                    <p key={index}>{paragraph}</p>
+                  ),
+                )}
+              </div>
             </section>
           ) : null}
 
           {snippet.references.length ? (
-            <section>
+            <section
+              className="detail-section references-section"
+              id="references"
+            >
+              <p className="eyebrow">{messages.detail.references}</p>
               <h2>{messages.detail.references}</h2>
               <ul className="reference-list">
                 {snippet.references.map((reference) => (
@@ -237,7 +391,7 @@ export default function SnippetDetail({ loaderData }: Route.ComponentProps) {
               </ul>
             </section>
           ) : null}
-        </aside>
+        </div>
       </div>
     </main>
   );

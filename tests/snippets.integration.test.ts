@@ -301,6 +301,65 @@ describe("snippet publication model", () => {
     expect(fts.results).toHaveLength(1);
   });
 
+  it("exposes imported script provenance and only links published sources", async () => {
+    const db = createDatabase(env.DB);
+    const source = await seedSnippet(db, crypto.randomUUID());
+    const dependent = await seedSnippet(db, crypto.randomUUID());
+
+    await db
+      .update(snippetRevisionScripts)
+      .set({
+        metadata: {
+          sourceModuleId: source.slug,
+          sourceScriptId: "main",
+          importedFrom: { moduleId: source.slug, scriptId: "main" },
+        },
+      })
+      .where(eq(snippetRevisionScripts.revisionId, dependent.revisionId));
+
+    await publishSnippetRevision(db, {
+      snippetId: dependent.snippetId,
+      revisionId: dependent.revisionId,
+      englishLocalizationRevisionId: dependent.englishRevisionId,
+    });
+
+    await expect(
+      resolvePublishedSnippet(db, dependent.slug, "en"),
+    ).resolves.toMatchObject({
+      scripts: [
+        {
+          importedFrom: {
+            moduleId: source.slug,
+            scriptId: "main",
+            sourceSlug: null,
+            sourceTitle: null,
+          },
+        },
+      ],
+    });
+
+    await publishSnippetRevision(db, {
+      snippetId: source.snippetId,
+      revisionId: source.revisionId,
+      englishLocalizationRevisionId: source.englishRevisionId,
+    });
+
+    await expect(
+      resolvePublishedSnippet(db, dependent.slug, "en"),
+    ).resolves.toMatchObject({
+      scripts: [
+        {
+          importedFrom: {
+            moduleId: source.slug,
+            scriptId: "main",
+            sourceSlug: source.slug,
+            sourceTitle: "English example",
+          },
+        },
+      ],
+    });
+  });
+
   it("uses an explicitly selected preview script instead of its position", async () => {
     const db = createDatabase(env.DB);
     const seed = await seedSnippet(db, crypto.randomUUID());

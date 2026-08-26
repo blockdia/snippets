@@ -23,6 +23,15 @@ export interface SnippetRevisionMetadata extends Record<string, unknown> {
   previewScriptKey?: string;
 }
 
+export interface SnippetRevisionScriptMetadata extends Record<string, unknown> {
+  sourceModuleId?: string;
+  sourceScriptId?: string;
+  importedFrom?: {
+    moduleId: string;
+    scriptId: string;
+  } | null;
+}
+
 export const locales = sqliteTable(
   "locales",
   {
@@ -158,7 +167,7 @@ export const snippetRevisionScripts = sqliteTable(
     scriptKey: text("script_key").notNull(),
     position: integer("position").notNull(),
     source: text("source").notNull(),
-    metadata: metadata("metadata"),
+    metadata: metadata<SnippetRevisionScriptMetadata>("metadata"),
   },
   (table) => [
     uniqueIndex("snippet_revision_scripts_key_unique").on(

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Document, DocumentView } from "scratchblocks-plus";
 
 import type { Locale } from "../i18n/locales";
+import { copyText } from "./clipboard";
 import {
   ensureScratchblocksLanguage,
   loadScratchblocksApi,
@@ -17,27 +18,6 @@ export interface ScratchblocksLabels {
   exportPng: string;
   renderFailed: string;
   codePreview: string;
-}
-
-async function copyText(text: string): Promise<boolean> {
-  try {
-    await navigator.clipboard.writeText(text);
-    return true;
-  } catch {
-    const textarea = document.createElement("textarea");
-    textarea.value = text;
-    textarea.style.position = "fixed";
-    textarea.style.left = "-9999px";
-    document.body.appendChild(textarea);
-    textarea.select();
-    try {
-      return document.execCommand("copy");
-    } catch {
-      return false;
-    } finally {
-      textarea.remove();
-    }
-  }
 }
 
 function download(url: string, filename: string): void {

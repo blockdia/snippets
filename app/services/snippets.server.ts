@@ -1,6 +1,7 @@
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 
 import type { AppDatabase } from "../db/client";
+import type { SnippetRevisionScriptMetadata } from "../db/schema";
 import {
   searchDocuments,
   snippetLocalizationPublications,
@@ -98,6 +99,12 @@ export interface PublishedSnippet {
     position: number;
     source: string;
     localized: boolean;
+    importedFrom: {
+      moduleId: string;
+      scriptId: string;
+      sourceSlug: string | null;
+      sourceTitle: string | null;
+    } | null;
   }[];
   translationUnits: {
     key: string;
@@ -824,6 +831,7 @@ export async function resolvePublishedSnippet(
           position: snippetRevisionScripts.position,
           source: sql<string>`coalesce(${snippetLocalizationRevisionScripts.source}, ${snippetRevisionScripts.source})`,
           localized: sql<boolean>`${snippetLocalizationRevisionScripts.id} IS NOT NULL`,
+          metadata: snippetRevisionScripts.metadata,
         })
         .from(snippetRevisionScripts)
         .leftJoin(
@@ -926,6 +934,88 @@ export async function resolvePublishedSnippet(
         .orderBy(asc(snippetLocalizations.locale)),
     ]);
 
+  function importedSourceFromMetadata(
+    scriptMetadata: SnippetRevisionScriptMetadata | null,
+  ): { moduleId: string; scriptId: string } | null {
+    const importedFrom = scriptMetadata?.importedFrom;
+    if (
+      !importedFrom ||
+      typeof importedFrom.moduleId !== "string" ||
+      typeof importedFrom.scriptId !== "string" ||
+      !importedFrom.moduleId ||
+      !importedFrom.scriptId
+    ) {
+      return null;
+    }
+    return importedFrom;
+  }
+
+  const importedModuleIds = [
+    ...new Set(
+      scriptRows.flatMap((script) => {
+        const importedFrom = importedSourceFromMetadata(script.metadata);
+        return importedFrom ? [importedFrom.moduleId] : [];
+      }),
+    ),
+  ];
+  const sourceRows = importedModuleIds.length
+    ? await db
+        .select({
+          slug: snippets.slug,
+          title: snippetLocalizationRevisions.title,
+        })
+        .from(snippets)
+        .innerJoin(
+          snippetPublications,
+          eq(snippetPublications.snippetId, snippets.id),
+        )
+        .innerJoin(
+          snippetRevisions,
+          eq(snippetRevisions.id, snippetPublications.revisionId),
+        )
+        .innerJoin(
+          snippetLocalizations,
+          eq(snippetLocalizations.snippetId, snippets.id),
+        )
+        .innerJoin(
+          snippetLocalizationPublications,
+          eq(
+            snippetLocalizationPublications.localizationId,
+            snippetLocalizations.id,
+          ),
+        )
+        .innerJoin(
+          snippetLocalizationRevisions,
+          eq(
+            snippetLocalizationRevisions.id,
+            snippetLocalizationPublications.localizationRevisionId,
+          ),
+        )
+        .where(
+          and(
+            inArray(snippets.slug, importedModuleIds),
+            eq(snippets.status, "active"),
+            eq(snippetRevisions.status, "published"),
+            eq(snippetLocalizationRevisions.status, "published"),
+            eq(
+              snippetLocalizationRevisions.translationBasisHash,
+              snippetRevisions.translationBasisHash,
+            ),
+            inArray(snippetLocalizations.locale, candidateLocales),
+          ),
+        )
+        .orderBy(
+          asc(snippets.slug),
+          sql`CASE WHEN ${snippetLocalizations.locale} = ${requestedLocale} THEN 0 ELSE 1 END`,
+        )
+    : [];
+  const publishedSources = new Map<string, { slug: string; title: string }>();
+  for (const source of sourceRows) {
+    if (!publishedSources.has(source.slug)) {
+      publishedSources.set(source.slug, source);
+    }
+  }
+
   const resolvedLocale = content.locale as Locale;
   return {
     id: content.snippetId,
@@ -950,10 +1040,23 @@ export async function resolvePublishedSnippet(
       bodyMarkdown: content.bodyMarkdown,
       keywords: content.keywords,
     },
-    scripts: scriptRows.map((script) => ({
-      ...script,
-      localized: Boolean(script.localized),
-    })),
+    scripts: scriptRows.map(({ metadata, ...script }) => {
+      const importedFrom = importedSourceFromMetadata(metadata);
+      const publishedSource = importedFrom
+        ? publishedSources.get(importedFrom.moduleId)
+        : undefined;
+      return {
+        ...script,
+        localized: Boolean(script.localized),
+        importedFrom: importedFrom
+          ? {
+              ...importedFrom,
+              sourceSlug: publishedSource?.slug ?? null,
+              sourceTitle: publishedSource?.title ?? null,
+            }
+          : null,
+      };
+    }),
     translationUnits: unitRows.map((unit) => ({
       ...unit,
       localized: Boolean(unit.localized),
