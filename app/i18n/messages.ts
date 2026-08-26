@@ -72,7 +72,7 @@ const en = {
     translationFallbackTitle: "This snippet is not translated yet",
     translationFallbackDescription:
       "You are viewing the English content while the requested translation is unavailable or being updated.",
-    availableLanguages: "Available languages",
+    translationUnavailable: "Uses English content",
     details: "Details",
     revision: "Revision",
     published: "Published",
@@ -214,7 +214,7 @@ const zhCN: Messages = {
     translationFallbackTitle: "这个片段还没有可用的中文翻译",
     translationFallbackDescription:
       "当前显示英文内容；中文翻译可能尚未创建，或正在适配新的代码版本。",
-    availableLanguages: "可用语言",
+    translationUnavailable: "将显示英文内容",
     details: "详细信息",
     revision: "修订版本",
     published: "发布于",
@@ -347,7 +347,7 @@ const zhTW: Messages = {
     translationFallbackTitle: "這個片段還沒有可用的中文翻譯",
     translationFallbackDescription:
       "目前顯示英文內容；中文翻譯可能尚未建立，或正在配合新的程式版本。",
-    availableLanguages: "可用語言",
+    translationUnavailable: "將顯示英文內容",
     details: "詳細資訊",
     revision: "修訂版本",
     published: "發布於",

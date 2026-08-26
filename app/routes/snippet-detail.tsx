@@ -302,24 +302,6 @@ export default function SnippetDetail({ loaderData }: Route.ComponentProps) {
         </section>
 
         <section>
-          <h2>{messages.detail.availableLanguages}</h2>
-          <div className="available-locales">
-            {snippet.availableLocales.map((availableLocale) => (
-              <Link
-                aria-current={
-                  availableLocale === loaderData.locale ? "page" : undefined
-                }
-                key={availableLocale}
-                lang={availableLocale}
-                to={`/${toLocaleSegment(availableLocale)}/snippets/${snippet.slug}`}
-              >
-                {availableLocale}
-              </Link>
-            ))}
-          </div>
-        </section>
-
-        <section>
           <h2>{messages.detail.details}</h2>
           <dl className="snippet-facts">
             <div>

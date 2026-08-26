@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
-import { Link, NavLink, useLocation } from "react-router";
+import { Link, NavLink, useLocation, useMatches } from "react-router";
 
 import type { Messages } from "../i18n/messages";
 import {
@@ -27,6 +27,33 @@ function pathForLocale(pathname: string, locale: Locale): string {
   const segments = pathname.split("/");
   segments[1] = toLocaleSegment(locale);
   return segments.join("/") || `/${toLocaleSegment(locale)}`;
+}
+
+interface SnippetLanguageContext {
+  availableLocales: Locale[];
+}
+
+function getSnippetLanguageContext(
+  matches: ReturnType<typeof useMatches>,
+): SnippetLanguageContext | null {
+  for (const match of matches) {
+    if (!match.loaderData || typeof match.loaderData !== "object") continue;
+    if (!("snippet" in match.loaderData)) continue;
+
+    const snippet = match.loaderData.snippet;
+    if (!snippet || typeof snippet !== "object") continue;
+    if (!("availableLocales" in snippet)) continue;
+    if (!Array.isArray(snippet.availableLocales)) continue;
+
+    const availableLocales = snippet.availableLocales.filter(
+      (value): value is Locale =>
+        SUPPORTED_LOCALES.some((supportedLocale) => supportedLocale === value),
+    );
+
+    return { availableLocales };
+  }
+
+  return null;
 }
 
 function ThemeToggle({ label }: { label: string }) {
@@ -238,8 +265,13 @@ export function SiteHeader({
   messages: Messages;
 }) {
   const location = useLocation();
+  const matches = useMatches();
   const localeSegment = toLocaleSegment(locale);
   const localeSwitcherRef = useRef<HTMLDetailsElement>(null);
+  const snippetLanguageContext = getSnippetLanguageContext(matches);
+  const snippetLocales = new Set(
+    snippetLanguageContext?.availableLocales ?? [],
+  );
 
   useEffect(() => {
     function closeLocaleSwitcher(event: MouseEvent) {
@@ -291,6 +323,9 @@ export function SiteHeader({
               <span>{localeLabels[locale]}</span>
             </summary>
             <div className="locale-menu">
+              <p className="locale-menu-heading">
+                {messages.navigation.language}
+              </p>
               {SUPPORTED_LOCALES.map((targetLocale) => (
                 <Link
                   aria-current={targetLocale === locale ? "page" : undefined}
@@ -298,7 +333,11 @@ export function SiteHeader({
                   lang={targetLocale}
                   to={`${pathForLocale(location.pathname, targetLocale)}${location.search}`}
                 >
-                  {localeLabels[targetLocale]}
+                  <span>{localeLabels[targetLocale]}</span>
+                  {snippetLanguageContext &&
+                  !snippetLocales.has(targetLocale) ? (
+                    <small>{messages.detail.translationUnavailable}</small>
+                  ) : null}
                 </Link>
               ))}
             </div>
