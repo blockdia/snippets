@@ -16,6 +16,12 @@
       "migrations_dir": "migrations",
     },
   ],
+  "r2_buckets": [
+    {
+      "binding": "ARTIFACTS",
+      "bucket_name": "snippets-artifacts",
+    },
+  ],
   "observability": {
     "enabled": true,
   },

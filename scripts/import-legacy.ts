@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { spawn } from "node:child_process";
-import { mkdir, mkdtemp, rename, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import process from "node:process";
@@ -17,10 +17,10 @@ import { loadLegacySnapshot } from "./importer/filesystem";
 interface Options {
   source: string;
   database: string;
+  r2Bucket: string;
   mode: "dry-run" | "local" | "remote";
   persistTo: string | null;
   emitSql: string | null;
-  copyArtifacts: boolean;
   json: boolean;
 }
 
@@ -31,9 +31,9 @@ Options:
   --apply-local          Import into the local D1 database
   --apply-remote         Import into the remote D1 database (explicit only)
   --database <name>      D1 database name or binding (default: snippets)
+  --r2-bucket <name>     R2 bucket name (default: snippets-artifacts)
   --persist-to <path>    Isolated local D1 persistence directory
   --emit-sql <path>      Write the deterministic import SQL to a file
-  --skip-artifacts       Do not copy .sb3 files when applying
   --json                 Print the plan summary as JSON
   --help                 Show this help
 `;
@@ -49,10 +49,10 @@ function parseOptions(args: string[]): Options {
   const options: Options = {
     source: process.env.LEGACY_PROJECT ?? "",
     database: "snippets",
+    r2Bucket: "snippets-artifacts",
     mode: "dry-run",
     persistTo: null,
     emitSql: null,
-    copyArtifacts: true,
     json: false,
   };
   for (let index = 0; index < args.length; index += 1) {
@@ -65,6 +65,9 @@ function parseOptions(args: string[]): Options {
       index += 1;
     } else if (flag === "--database") {
       options.database = takeValue(args, index, flag);
+      index += 1;
+    } else if (flag === "--r2-bucket") {
+      options.r2Bucket = takeValue(args, index, flag);
       index += 1;
     } else if (flag === "--emit-sql") {
       options.emitSql = takeValue(args, index, flag);
@@ -80,8 +83,6 @@ function parseOptions(args: string[]): Options {
     } else if (flag === "--apply-remote") {
       if (options.mode === "local") throw new Error("Choose one apply mode");
       options.mode = "remote";
-    } else if (flag === "--skip-artifacts") {
-      options.copyArtifacts = false;
     } else if (flag === "--json") {
       options.json = true;
     } else {
@@ -155,20 +156,43 @@ function printPlan(plan: LegacyImportPlan, asJson: boolean) {
   }
 }
 
-async function copyArtifacts(plan: LegacyImportPlan) {
-  for (const artifact of plan.snippets.flatMap((snippet) =>
+async function uploadArtifacts(
+  plan: LegacyImportPlan,
+  options: Options,
+  temporaryDirectory: string,
+) {
+  const artifacts = plan.snippets.flatMap((snippet) =>
     snippet.artifact ? [snippet.artifact] : [],
-  )) {
-    const destination = path.resolve("public", artifact.storageKey);
-    const publicRoot = `${path.resolve("public")}${path.sep}`;
-    if (!destination.startsWith(publicRoot)) {
-      throw new Error(`Artifact path escapes public/: ${artifact.storageKey}`);
-    }
-    await mkdir(path.dirname(destination), { recursive: true });
-    const temporary = `${destination}.${process.pid}.tmp`;
-    await writeFile(temporary, artifact.bytes, { flag: "wx" });
-    await rename(temporary, destination);
+  );
+  const targetFlag = options.mode === "remote" ? "--remote" : "--local";
+  const persistenceArgs = options.persistTo
+    ? ["--persist-to", path.resolve(options.persistTo)]
+    : [];
+
+  for (const [index, artifact] of artifacts.entries()) {
+    const artifactPath = path.join(temporaryDirectory, `${index}.sb3`);
+    await writeFile(artifactPath, artifact.bytes, { flag: "wx" });
+    await run(wranglerExecutable(), [
+      "r2",
+      "object",
+      "put",
+      `${options.r2Bucket}/${artifact.storageKey}`,
+      targetFlag,
+      ...persistenceArgs,
+      "--file",
+      artifactPath,
+      "--content-type",
+      artifact.contentType,
+      "--cache-control",
+      "public, max-age=31536000, immutable",
+      "--storage-class",
+      "Standard",
+      "--force",
+    ]);
   }
+  console.log(
+    `Uploaded ${artifacts.length} SB3 artifact(s) to R2 bucket ${options.r2Bucket}.`,
+  );
 }
 
 function verificationRow(raw: string): Record<string, number> | null {
@@ -222,11 +246,11 @@ async function main() {
   }
   if (options.mode === "dry-run") return;
 
-  if (options.copyArtifacts) await copyArtifacts(plan);
   const temporaryDirectory = await mkdtemp(
     path.join(os.tmpdir(), "snippets-import-"),
   );
   try {
+    await uploadArtifacts(plan, options, temporaryDirectory);
     const sqlPath = path.join(temporaryDirectory, "legacy-import.sql");
     await writeFile(sqlPath, sql, "utf8");
     const targetFlag = options.mode === "remote" ? "--remote" : "--local";

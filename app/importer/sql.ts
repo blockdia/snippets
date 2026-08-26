@@ -267,7 +267,7 @@ WHERE NOT EXISTS (
             text(snippet.revisionId),
             text(snippet.artifact.key),
             text("sb3"),
-            text("static"),
+            text("r2"),
             text(snippet.artifact.storageKey),
             text(snippet.artifact.contentType),
             number(snippet.artifact.byteSize),

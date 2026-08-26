@@ -1,6 +1,7 @@
 import { type RouteConfig, index, route } from "@react-router/dev/routes";
 
 export default [
+  route("artifacts/sb3/*", "routes/sb3-artifact.ts"),
   index("routes/root-redirect.tsx"),
   route(":locale", "routes/locale-layout.tsx", [
     index("routes/locale-home.tsx"),

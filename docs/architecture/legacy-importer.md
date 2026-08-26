@@ -57,9 +57,12 @@ attached to imported source and localization revisions. Each row retains a
 legacy source reference and the snapshot fingerprint. Imported Scratch code is
 recorded as CC0 1.0, prose as CC BY-SA 4.0, and `.sb3` examples as CC BY 4.0.
 
-`.sb3` files use immutable, content-addressed Static Assets paths under
-`public/examples/legacy/<slug>/<hash>.sb3`. A failed D1 import can leave an
-unreferenced content-addressed file, but cannot overwrite an older artifact.
+`.sb3` files use immutable, globally content-addressed R2 keys under
+`sb3/<full-sha256>.sb3`. The bucket stays private; published demos are streamed
+through `/artifacts/sb3/<full-sha256>.sb3` by the Worker with immutable cache,
+range, conditional-request, and TurboWarp CORS headers. A failed D1 import can
+leave an unreferenced content-addressed R2 object, but cannot overwrite a
+different artifact.
 
 ## CLI workflow
 
@@ -83,9 +86,15 @@ npm run import:legacy -- --source /path/to/legacy --apply-remote
 ```
 
 `LEGACY_PROJECT` can replace `--source`; `--database` selects a non-default D1
-binding/name. `--persist-to <path>` isolates a local D1 import for testing.
-Apply mode copies artifacts unless `--skip-artifacts` is supplied, executes the
-generated SQL file through Wrangler, and runs an imported-count verification
-query. The runtime helper uses one D1 `batch()` call and performs the same
-post-import verification, which is exercised against real D1 in the Cloudflare
-test runtime.
+binding/name, and `--r2-bucket` selects a non-default artifact bucket.
+`--persist-to <path>` isolates both local D1 and local R2 state for testing.
+Apply mode uploads every artifact to R2 before executing the generated D1 SQL,
+so an upload failure cannot create a dangling database reference. It then runs
+an imported-count verification query. The runtime helper uses one D1 `batch()`
+call and performs the same post-import verification, which is exercised against
+real D1 in the Cloudflare test runtime.
+
+The previous static-artifact format is deliberately unsupported. Existing
+local Wrangler state must be discarded and imported again. Before a remote
+apply, create the private bucket once with
+`wrangler r2 bucket create snippets-artifacts`.

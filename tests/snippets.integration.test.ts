@@ -387,20 +387,21 @@ describe("snippet publication model", () => {
     });
   });
 
-  it("exposes a safe static SB3 demo from the published revision", async () => {
+  it("exposes an R2 SB3 demo from the published revision", async () => {
     const db = createDatabase(env.DB);
     const seed = await seedSnippet(db, crypto.randomUUID());
+    const demoHash = "a".repeat(64);
 
     await db.insert(artifacts).values({
       id: `artifact-${crypto.randomUUID()}`,
       revisionId: seed.revisionId,
       artifactKey: "demo",
       kind: "sb3",
-      storage: "static",
-      storageKey: `examples/legacy/${seed.slug}/demo file.sb3`,
+      storage: "r2",
+      storageKey: `sb3/${demoHash}.sb3`,
       contentType: "application/x.scratch.sb3",
       byteSize: 4096,
-      sha256: "a".repeat(64),
+      sha256: demoHash,
       license: "CC-BY-4.0",
       attribution: "Example project",
     });
@@ -414,14 +415,41 @@ describe("snippet publication model", () => {
       resolvePublishedSnippet(db, seed.slug, "en"),
     ).resolves.toMatchObject({
       demo: {
-        path: `/examples/legacy/${seed.slug}/demo%20file.sb3`,
+        path: `/artifacts/sb3/${demoHash}.sb3`,
         contentType: "application/x.scratch.sb3",
         byteSize: 4096,
-        sha256: "a".repeat(64),
+        sha256: demoHash,
         license: "CC-BY-4.0",
         attribution: "Example project",
       },
     });
+  });
+
+  it("does not expose legacy static SB3 artifacts", async () => {
+    const db = createDatabase(env.DB);
+    const seed = await seedSnippet(db, crypto.randomUUID());
+
+    await db.insert(artifacts).values({
+      id: `artifact-${crypto.randomUUID()}`,
+      revisionId: seed.revisionId,
+      artifactKey: "demo",
+      kind: "sb3",
+      storage: "static",
+      storageKey: `examples/legacy/${seed.slug}/demo.sb3`,
+      contentType: "application/x.scratch.sb3",
+      byteSize: 4096,
+      sha256: "a".repeat(64),
+      license: "CC-BY-4.0",
+    });
+    await publishSnippetRevision(db, {
+      snippetId: seed.snippetId,
+      revisionId: seed.revisionId,
+      englishLocalizationRevisionId: seed.englishRevisionId,
+    });
+
+    await expect(
+      resolvePublishedSnippet(db, seed.slug, "en"),
+    ).resolves.toMatchObject({ demo: null });
   });
 
   it("exposes imported script provenance and only links published sources", async () => {

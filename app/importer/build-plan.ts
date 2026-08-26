@@ -747,7 +747,7 @@ export async function buildLegacyImportPlan(
       artifact = {
         id: "",
         key: "demo",
-        storageKey: `examples/legacy/${module.id}/${artifactHash.slice(0, 16)}.sb3`,
+        storageKey: `sb3/${artifactHash}.sb3`,
         contentType: "application/x.scratch.sb3",
         byteSize: module.demo.bytes.byteLength,
         sha256: artifactHash,

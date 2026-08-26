@@ -2,8 +2,9 @@
 
 ## Architecture decisions
 
-- Runtime: one Cloudflare Worker, Workers Static Assets, Cloudflare Vite Plugin,
-  React Router v8 SSR, TypeScript, and one D1 database.
+- Runtime: one Cloudflare Worker, Workers Static Assets, a private R2 artifact
+  bucket, Cloudflare Vite Plugin, React Router v8 SSR, TypeScript, and one D1
+  database.
 - D1 is the runtime content source. The legacy repository is import input only;
   Markdown and GitHub are not the runtime CMS.
 - Public URLs use lowercase locale segments such as `/en/snippets/foo` and
@@ -16,8 +17,8 @@
   independent, immutable records with draft/published states.
 - Scratch code starts as versioned `scratchblocks` strings behind a
   representation discriminator so a future block AST can coexist or replace it.
-- R2 is deferred. Existing small `.sb3` examples can ship as static assets until
-  artifact scale or upload requirements justify object storage.
+- `.sb3` examples use immutable, content-addressed keys in a private R2 bucket
+  and are streamed through a same-origin Worker resource route.
 
 ## Translation compatibility
 
@@ -65,8 +66,8 @@ English. FTS5 is then applied only to that eligible set. This guarantees:
   correspondence between source and translated scratchblocks.
 - `tags` plus localized tag labels; snippet/tag links are revision-aware where
   editorial history requires it.
-- `artifacts`: static or future R2-backed `.sb3` metadata with independent
-  license, integrity hash, and storage discriminator.
+- `artifacts`: R2-backed `.sb3` metadata with independent license, integrity
+  hash, and storage discriminator.
 - `search_documents` plus FTS5 virtual table/triggers: only published,
   basis-compatible content is indexed.
 

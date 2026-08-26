@@ -140,9 +140,7 @@ describe("legacy importer", () => {
       "en",
       "zh-CN",
     ]);
-    expect(consumer?.artifact?.storageKey).toMatch(
-      /^examples\/legacy\/consumer\/[a-f0-9]{16}\.sb3$/,
-    );
+    expect(consumer?.artifact?.storageKey).toMatch(/^sb3\/[a-f0-9]{64}\.sb3$/);
 
     const translationEdit = fixture();
     const translated = translationEdit.modules[0]!.translations[0]!.value as {
@@ -187,6 +185,11 @@ describe("legacy importer", () => {
         "SELECT count(*) AS value FROM snippet_localization_revisions",
       ),
     ).toBe(4);
+    expect(
+      await env.DB.prepare(
+        "SELECT storage FROM artifacts WHERE artifact_key = 'demo'",
+      ).first<{ storage: string }>(),
+    ).toEqual({ storage: "r2" });
 
     const db = createDatabase(env.DB);
     const resolved = await resolvePublishedSnippet(db, "consumer", "zh-CN");

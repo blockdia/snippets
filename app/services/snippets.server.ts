@@ -55,15 +55,9 @@ function safePublicUrl(value: string | null): string | null {
   }
 }
 
-function staticArtifactPath(storageKey: string): string | null {
-  const segments = storageKey.split("/");
-  if (
-    !segments.length ||
-    segments.some((segment) => !segment || segment === "." || segment === "..")
-  ) {
-    return null;
-  }
-  return `/${segments.map(encodeURIComponent).join("/")}`;
+function r2ArtifactPath(storageKey: string): string | null {
+  const match = /^sb3\/([a-f0-9]{64})\.sb3$/.exec(storageKey);
+  return match ? `/artifacts/sb3/${match[1]}.sb3` : null;
 }
 
 export type PublicationErrorCode =
@@ -1052,7 +1046,7 @@ export async function resolvePublishedSnippet(
           eq(artifacts.revisionId, content.revisionId),
           eq(artifacts.artifactKey, "demo"),
           eq(artifacts.kind, "sb3"),
-          eq(artifacts.storage, "static"),
+          eq(artifacts.storage, "r2"),
         ),
       )
       .limit(1),
@@ -1165,9 +1159,7 @@ export async function resolvePublishedSnippet(
   }
 
   const resolvedLocale = content.locale as Locale;
-  const demoPath = demoRows[0]
-    ? staticArtifactPath(demoRows[0].storageKey)
-    : null;
+  const demoPath = demoRows[0] ? r2ArtifactPath(demoRows[0].storageKey) : null;
   return {
     id: content.snippetId,
     slug: content.slug,

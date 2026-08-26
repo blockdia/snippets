@@ -6,7 +6,7 @@ as product and import reference.
 
 ## Stack
 
-- Cloudflare Workers and Workers Static Assets
+- Cloudflare Workers, Workers Static Assets, and private R2 artifact storage
 - Cloudflare Vite Plugin
 - React Router v8 SSR and React 19
 - TypeScript
@@ -37,6 +37,21 @@ npm run dev
 The app is served at `http://localhost:5173` with a local D1 binding. The
 all-zero database id in `wrangler.jsonc` is intentionally local-only; replace it
 when a real Cloudflare D1 database is provisioned.
+
+Legacy `.sb3` demos live in the local `snippets-artifacts` R2 binding rather
+than `public/`. Initialize both stores and import the legacy snapshot before
+testing demo pages:
+
+```sh
+npm run db:migrate:local
+npm run import:legacy -- \
+  --source /path/to/scratch-modules-gallery \
+  --apply-local
+```
+
+The former static-artifact implementation is intentionally incompatible. When
+upgrading an existing checkout, remove `.wrangler/state`, apply the migrations,
+and import again instead of reusing old local D1 rows.
 
 ## Quality checks
 
@@ -82,6 +97,17 @@ npm run deploy:dry-run
 
 `npm run deploy` performs a real Cloudflare deployment and should only be used
 after configuring the target account and real D1 database id.
+
+Create the private artifact bucket once before the first remote import or
+deployment:
+
+```sh
+npx wrangler r2 bucket create snippets-artifacts
+npm run db:migrate:remote
+npm run import:legacy -- \
+  --source /path/to/scratch-modules-gallery \
+  --apply-remote
+```
 
 ## Licensing
 
