@@ -3,13 +3,16 @@ import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import type { AppDatabase } from "../db/client";
 import type { SnippetRevisionScriptMetadata } from "../db/schema";
 import {
+  contributors,
   searchDocuments,
   snippetLocalizationPublications,
+  snippetLocalizationRevisionContributors,
   snippetLocalizationRevisionScripts,
   snippetLocalizationRevisionUnits,
   snippetLocalizationRevisions,
   snippetLocalizations,
   snippetPublications,
+  snippetRevisionContributors,
   snippetRevisionReferences,
   snippetRevisionScripts,
   snippetRevisionSymbols,
@@ -37,6 +40,18 @@ interface LocalizationDocumentSource {
   summary: string;
   body: string;
   keywords: string[];
+}
+
+function safePublicUrl(value: string | null): string | null {
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:"
+      ? url.toString()
+      : null;
+  } catch {
+    return null;
+  }
 }
 
 export type PublicationErrorCode =
@@ -94,6 +109,21 @@ export interface PublishedSnippet {
     bodyMarkdown: string;
     keywords: string[];
   };
+  publication: {
+    publishedAt: string;
+    updatedAt: string;
+  };
+  licenses: {
+    code: string;
+    prose: string;
+  };
+  contributors: {
+    id: string;
+    kind: "user" | "github" | "scratch" | "name" | "organization";
+    displayName: string;
+    profileUrl: string | null;
+    roles: ("author" | "maintainer" | "source" | "translator" | "reviewer")[];
+  }[];
   scripts: {
     key: string;
     position: number;
@@ -764,6 +794,8 @@ export async function resolvePublishedSnippet(
       representation: snippetRevisions.representation,
       representationVersion: snippetRevisions.representationVersion,
       basis: snippetRevisions.translationBasisHash,
+      codeLicense: snippetRevisions.codeLicense,
+      codeUpdatedAt: snippetPublications.publishedAt,
       localizationId: snippetLocalizations.id,
       locale: snippetLocalizations.locale,
       localizationRevisionId: snippetLocalizationRevisions.id,
@@ -773,6 +805,8 @@ export async function resolvePublishedSnippet(
       seoDescription: snippetLocalizationRevisions.seoDescription,
       bodyMarkdown: snippetLocalizationRevisions.bodyMarkdown,
       keywords: snippetLocalizationRevisions.keywords,
+      proseLicense: snippetLocalizationRevisions.proseLicense,
+      localizationUpdatedAt: snippetLocalizationPublications.publishedAt,
     })
     .from(snippets)
     .innerJoin(
@@ -823,116 +857,190 @@ export async function resolvePublishedSnippet(
     return null;
   }
 
-  const [scriptRows, unitRows, symbols, references, tagRows, localeRows] =
-    await Promise.all([
-      db
-        .select({
-          key: snippetRevisionScripts.scriptKey,
-          position: snippetRevisionScripts.position,
-          source: sql<string>`coalesce(${snippetLocalizationRevisionScripts.source}, ${snippetRevisionScripts.source})`,
-          localized: sql<boolean>`${snippetLocalizationRevisionScripts.id} IS NOT NULL`,
-          metadata: snippetRevisionScripts.metadata,
-        })
-        .from(snippetRevisionScripts)
-        .leftJoin(
-          snippetLocalizationRevisionScripts,
-          and(
-            eq(
-              snippetLocalizationRevisionScripts.localizationRevisionId,
-              content.localizationRevisionId,
-            ),
-            eq(
-              snippetLocalizationRevisionScripts.scriptKey,
-              snippetRevisionScripts.scriptKey,
-            ),
-          ),
-        )
-        .where(eq(snippetRevisionScripts.revisionId, content.revisionId))
-        .orderBy(asc(snippetRevisionScripts.position)),
-      db
-        .select({
-          key: snippetRevisionTranslationUnits.unitKey,
-          kind: snippetRevisionTranslationUnits.kind,
-          position: snippetRevisionTranslationUnits.position,
-          sourceText: snippetRevisionTranslationUnits.sourceText,
-          text: sql<string>`coalesce(${snippetLocalizationRevisionUnits.translatedText}, ${snippetRevisionTranslationUnits.sourceText})`,
-          localized: sql<boolean>`${snippetLocalizationRevisionUnits.id} IS NOT NULL`,
-        })
-        .from(snippetRevisionTranslationUnits)
-        .leftJoin(
-          snippetLocalizationRevisionUnits,
-          and(
-            eq(
-              snippetLocalizationRevisionUnits.localizationRevisionId,
-              content.localizationRevisionId,
-            ),
-            eq(
-              snippetLocalizationRevisionUnits.unitKey,
-              snippetRevisionTranslationUnits.unitKey,
-            ),
-          ),
-        )
-        .where(
-          eq(snippetRevisionTranslationUnits.revisionId, content.revisionId),
-        )
-        .orderBy(asc(snippetRevisionTranslationUnits.position)),
-      db
-        .select({
-          key: snippetRevisionSymbols.symbolKey,
-          kind: snippetRevisionSymbols.kind,
-          scope: snippetRevisionSymbols.scope,
-          nameUnitKey: snippetRevisionSymbols.nameUnitKey,
-          position: snippetRevisionSymbols.position,
-        })
-        .from(snippetRevisionSymbols)
-        .where(eq(snippetRevisionSymbols.revisionId, content.revisionId))
-        .orderBy(asc(snippetRevisionSymbols.position)),
-      db
-        .select({
-          key: snippetRevisionReferences.referenceKey,
-          kind: snippetRevisionReferences.kind,
-          url: snippetRevisionReferences.url,
-          titleUnitKey: snippetRevisionReferences.titleUnitKey,
-          position: snippetRevisionReferences.position,
-        })
-        .from(snippetRevisionReferences)
-        .where(eq(snippetRevisionReferences.revisionId, content.revisionId))
-        .orderBy(asc(snippetRevisionReferences.position)),
-      db
-        .select({ slug: tags.slug, position: snippetRevisionTags.position })
-        .from(snippetRevisionTags)
-        .innerJoin(tags, eq(tags.id, snippetRevisionTags.tagId))
-        .where(eq(snippetRevisionTags.revisionId, content.revisionId))
-        .orderBy(asc(snippetRevisionTags.position)),
-      db
-        .select({ locale: snippetLocalizations.locale })
-        .from(snippetLocalizations)
-        .innerJoin(
-          snippetLocalizationPublications,
+  const [
+    scriptRows,
+    unitRows,
+    symbols,
+    references,
+    tagRows,
+    localeRows,
+    codeContributorRows,
+    localizationContributorRows,
+    publicationRows,
+  ] = await Promise.all([
+    db
+      .select({
+        key: snippetRevisionScripts.scriptKey,
+        position: snippetRevisionScripts.position,
+        source: sql<string>`coalesce(${snippetLocalizationRevisionScripts.source}, ${snippetRevisionScripts.source})`,
+        localized: sql<boolean>`${snippetLocalizationRevisionScripts.id} IS NOT NULL`,
+        metadata: snippetRevisionScripts.metadata,
+      })
+      .from(snippetRevisionScripts)
+      .leftJoin(
+        snippetLocalizationRevisionScripts,
+        and(
           eq(
-            snippetLocalizationPublications.localizationId,
-            snippetLocalizations.id,
+            snippetLocalizationRevisionScripts.localizationRevisionId,
+            content.localizationRevisionId,
           ),
-        )
-        .innerJoin(
-          snippetLocalizationRevisions,
           eq(
-            snippetLocalizationRevisions.id,
-            snippetLocalizationPublications.localizationRevisionId,
+            snippetLocalizationRevisionScripts.scriptKey,
+            snippetRevisionScripts.scriptKey,
           ),
-        )
-        .where(
-          and(
-            eq(snippetLocalizations.snippetId, content.snippetId),
-            eq(snippetLocalizationRevisions.status, "published"),
-            eq(
-              snippetLocalizationRevisions.translationBasisHash,
-              content.basis,
-            ),
+        ),
+      )
+      .where(eq(snippetRevisionScripts.revisionId, content.revisionId))
+      .orderBy(asc(snippetRevisionScripts.position)),
+    db
+      .select({
+        key: snippetRevisionTranslationUnits.unitKey,
+        kind: snippetRevisionTranslationUnits.kind,
+        position: snippetRevisionTranslationUnits.position,
+        sourceText: snippetRevisionTranslationUnits.sourceText,
+        text: sql<string>`coalesce(${snippetLocalizationRevisionUnits.translatedText}, ${snippetRevisionTranslationUnits.sourceText})`,
+        localized: sql<boolean>`${snippetLocalizationRevisionUnits.id} IS NOT NULL`,
+      })
+      .from(snippetRevisionTranslationUnits)
+      .leftJoin(
+        snippetLocalizationRevisionUnits,
+        and(
+          eq(
+            snippetLocalizationRevisionUnits.localizationRevisionId,
+            content.localizationRevisionId,
           ),
-        )
-        .orderBy(asc(snippetLocalizations.locale)),
-    ]);
+          eq(
+            snippetLocalizationRevisionUnits.unitKey,
+            snippetRevisionTranslationUnits.unitKey,
+          ),
+        ),
+      )
+      .where(eq(snippetRevisionTranslationUnits.revisionId, content.revisionId))
+      .orderBy(asc(snippetRevisionTranslationUnits.position)),
+    db
+      .select({
+        key: snippetRevisionSymbols.symbolKey,
+        kind: snippetRevisionSymbols.kind,
+        scope: snippetRevisionSymbols.scope,
+        nameUnitKey: snippetRevisionSymbols.nameUnitKey,
+        position: snippetRevisionSymbols.position,
+      })
+      .from(snippetRevisionSymbols)
+      .where(eq(snippetRevisionSymbols.revisionId, content.revisionId))
+      .orderBy(asc(snippetRevisionSymbols.position)),
+    db
+      .select({
+        key: snippetRevisionReferences.referenceKey,
+        kind: snippetRevisionReferences.kind,
+        url: snippetRevisionReferences.url,
+        titleUnitKey: snippetRevisionReferences.titleUnitKey,
+        position: snippetRevisionReferences.position,
+      })
+      .from(snippetRevisionReferences)
+      .where(eq(snippetRevisionReferences.revisionId, content.revisionId))
+      .orderBy(asc(snippetRevisionReferences.position)),
+    db
+      .select({ slug: tags.slug, position: snippetRevisionTags.position })
+      .from(snippetRevisionTags)
+      .innerJoin(tags, eq(tags.id, snippetRevisionTags.tagId))
+      .where(eq(snippetRevisionTags.revisionId, content.revisionId))
+      .orderBy(asc(snippetRevisionTags.position)),
+    db
+      .select({ locale: snippetLocalizations.locale })
+      .from(snippetLocalizations)
+      .innerJoin(
+        snippetLocalizationPublications,
+        eq(
+          snippetLocalizationPublications.localizationId,
+          snippetLocalizations.id,
+        ),
+      )
+      .innerJoin(
+        snippetLocalizationRevisions,
+        eq(
+          snippetLocalizationRevisions.id,
+          snippetLocalizationPublications.localizationRevisionId,
+        ),
+      )
+      .where(
+        and(
+          eq(snippetLocalizations.snippetId, content.snippetId),
+          eq(snippetLocalizationRevisions.status, "published"),
+          eq(snippetLocalizationRevisions.translationBasisHash, content.basis),
+        ),
+      )
+      .orderBy(asc(snippetLocalizations.locale)),
+    db
+      .select({
+        id: contributors.id,
+        kind: contributors.kind,
+        displayName: contributors.displayName,
+        profileUrl: contributors.profileUrl,
+        role: snippetRevisionContributors.role,
+        position: snippetRevisionContributors.position,
+      })
+      .from(snippetRevisionContributors)
+      .innerJoin(
+        contributors,
+        eq(contributors.id, snippetRevisionContributors.contributorId),
+      )
+      .where(eq(snippetRevisionContributors.revisionId, content.revisionId))
+      .orderBy(asc(snippetRevisionContributors.position)),
+    db
+      .select({
+        id: contributors.id,
+        kind: contributors.kind,
+        displayName: contributors.displayName,
+        profileUrl: contributors.profileUrl,
+        role: snippetLocalizationRevisionContributors.role,
+        position: snippetLocalizationRevisionContributors.position,
+      })
+      .from(snippetLocalizationRevisionContributors)
+      .innerJoin(
+        contributors,
+        eq(
+          contributors.id,
+          snippetLocalizationRevisionContributors.contributorId,
+        ),
+      )
+      .where(
+        eq(
+          snippetLocalizationRevisionContributors.localizationRevisionId,
+          content.localizationRevisionId,
+        ),
+      )
+      .orderBy(asc(snippetLocalizationRevisionContributors.position)),
+    db
+      .select({
+        publishedAt: sql<string | null>`min(${snippetRevisions.publishedAt})`,
+      })
+      .from(snippetRevisions)
+      .where(eq(snippetRevisions.snippetId, content.snippetId)),
+  ]);
+
+  const contributorMap = new Map<
+    string,
+    PublishedSnippet["contributors"][number]
+  >();
+  for (const contributor of [
+    ...codeContributorRows,
+    ...localizationContributorRows,
+  ]) {
+    const existing = contributorMap.get(contributor.id);
+    if (existing) {
+      if (!existing.roles.includes(contributor.role)) {
+        existing.roles.push(contributor.role);
+      }
+      continue;
+    }
+    contributorMap.set(contributor.id, {
+      id: contributor.id,
+      kind: contributor.kind,
+      displayName: contributor.displayName,
+      profileUrl: safePublicUrl(contributor.profileUrl),
+      roles: [contributor.role],
+    });
+  }
 
   function importedSourceFromMetadata(
     scriptMetadata: SnippetRevisionScriptMetadata | null,
@@ -1040,6 +1148,18 @@ export async function resolvePublishedSnippet(
       bodyMarkdown: content.bodyMarkdown,
       keywords: content.keywords,
     },
+    publication: {
+      publishedAt: publicationRows[0]?.publishedAt ?? content.codeUpdatedAt,
+      updatedAt:
+        content.codeUpdatedAt > content.localizationUpdatedAt
+          ? content.codeUpdatedAt
+          : content.localizationUpdatedAt,
+    },
+    licenses: {
+      code: content.codeLicense,
+      prose: content.proseLicense,
+    },
+    contributors: [...contributorMap.values()],
     scripts: scriptRows.map(({ metadata, ...script }) => {
       const importedFrom = importedSourceFromMetadata(metadata);
       const publishedSource = importedFrom

@@ -5,11 +5,14 @@ import { beforeEach, describe, expect, inject, it } from "vitest";
 
 import { createDatabase, type AppDatabase } from "../app/db/client";
 import {
+  contributors,
   searchDocuments,
+  snippetLocalizationRevisionContributors,
   snippetLocalizationRevisionScripts,
   snippetLocalizationRevisions,
   snippetLocalizations,
   snippetPublications,
+  snippetRevisionContributors,
   snippetRevisionScripts,
   snippetRevisionTags,
   snippetRevisionTranslationUnits,
@@ -299,6 +302,88 @@ describe("snippet publication model", () => {
       .bind("searchable", seed.snippetId)
       .all();
     expect(fts.results).toHaveLength(1);
+  });
+
+  it("resolves publication, license, and contributor metadata", async () => {
+    const db = createDatabase(env.DB);
+    const seed = await seedSnippet(db, crypto.randomUUID());
+    const authorId = `contributor-${crypto.randomUUID()}`;
+    const translatorId = `contributor-${crypto.randomUUID()}`;
+
+    await db
+      .update(snippetRevisions)
+      .set({ codeLicense: "MIT" })
+      .where(eq(snippetRevisions.id, seed.revisionId));
+    await db
+      .update(snippetLocalizationRevisions)
+      .set({ proseLicense: "CC-BY-4.0" })
+      .where(eq(snippetLocalizationRevisions.id, seed.englishRevisionId));
+    await db.insert(contributors).values([
+      {
+        id: authorId,
+        kind: "github",
+        externalId: crypto.randomUUID(),
+        displayName: "Example author",
+        profileUrl: "https://github.com/example",
+      },
+      {
+        id: translatorId,
+        kind: "name",
+        externalId: crypto.randomUUID(),
+        displayName: "Example translator",
+        profileUrl: "javascript:alert(1)",
+      },
+    ]);
+    await db.insert(snippetRevisionContributors).values({
+      revisionId: seed.revisionId,
+      contributorId: authorId,
+      role: "author",
+      position: 0,
+    });
+    await db.insert(snippetLocalizationRevisionContributors).values([
+      {
+        localizationRevisionId: seed.englishRevisionId,
+        contributorId: authorId,
+        role: "source",
+        position: 0,
+      },
+      {
+        localizationRevisionId: seed.englishRevisionId,
+        contributorId: translatorId,
+        role: "translator",
+        position: 1,
+      },
+    ]);
+
+    await publishSnippetRevision(db, {
+      snippetId: seed.snippetId,
+      revisionId: seed.revisionId,
+      englishLocalizationRevisionId: seed.englishRevisionId,
+      publishedAt: "2026-08-25T12:34:56.000Z",
+    });
+
+    const resolved = await resolvePublishedSnippet(db, seed.slug, "en");
+    expect(resolved).toMatchObject({
+      publication: {
+        publishedAt: "2026-08-25T12:34:56.000Z",
+        updatedAt: "2026-08-25T12:34:56.000Z",
+      },
+      licenses: { code: "MIT", prose: "CC-BY-4.0" },
+      contributors: [
+        {
+          id: authorId,
+          displayName: "Example author",
+          profileUrl: "https://github.com/example",
+          roles: ["author", "source"],
+        },
+        {
+          id: translatorId,
+          displayName: "Example translator",
+          profileUrl: null,
+          roles: ["translator"],
+        },
+      ],
+    });
   });
 
   it("exposes imported script provenance and only links published sources", async () => {

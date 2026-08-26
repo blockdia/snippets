@@ -80,6 +80,15 @@ export function meta({ loaderData }: Route.MetaArgs) {
         programmingLanguage: "Scratch",
         codeSampleType: "full",
         url: loaderData.canonicalUrl,
+        datePublished: snippet.publication.publishedAt,
+        dateModified: snippet.publication.updatedAt,
+        license: [snippet.licenses.code, snippet.licenses.prose],
+        author: snippet.contributors.map((contributor) => ({
+          "@type":
+            contributor.kind === "organization" ? "Organization" : "Person",
+          name: contributor.displayName,
+          ...(contributor.profileUrl ? { url: contributor.profileUrl } : {}),
+        })),
       },
     },
   ];
@@ -110,6 +119,22 @@ function scriptAnchorId(scriptKey: string): string {
 function translatedEnum(values: Record<string, string>, value: string): string {
   return values[value] ?? value;
 }
+
+function formatDate(value: string, locale: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat(locale, {
+    dateStyle: "medium",
+    timeZone: "UTC",
+  }).format(date);
+}
+
+const LICENSE_URLS: Record<string, string> = {
+  "CC0-1.0": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "CC-BY-4.0": "https://creativecommons.org/licenses/by/4.0/",
+  "CC-BY-SA-4.0": "https://creativecommons.org/licenses/by-sa/4.0/",
+  MIT: "https://opensource.org/license/mit",
+};
 
 export default function SnippetDetail({ loaderData }: Route.ComponentProps) {
   const messages = getMessages(loaderData.locale);
@@ -238,6 +263,105 @@ export default function SnippetDetail({ loaderData }: Route.ComponentProps) {
               ))}
             </div>
           </section>
+
+          <section>
+            <h2>{messages.detail.details}</h2>
+            <dl className="snippet-facts">
+              <div>
+                <dt>{messages.detail.revision}</dt>
+                <dd>#{snippet.revision.number}</dd>
+              </div>
+              <div>
+                <dt>{messages.detail.published}</dt>
+                <dd>
+                  <time dateTime={snippet.publication.publishedAt}>
+                    {formatDate(
+                      snippet.publication.publishedAt,
+                      loaderData.locale,
+                    )}
+                  </time>
+                </dd>
+              </div>
+              {snippet.publication.updatedAt !==
+              snippet.publication.publishedAt ? (
+                <div>
+                  <dt>{messages.detail.updated}</dt>
+                  <dd>
+                    <time dateTime={snippet.publication.updatedAt}>
+                      {formatDate(
+                        snippet.publication.updatedAt,
+                        loaderData.locale,
+                      )}
+                    </time>
+                  </dd>
+                </div>
+              ) : null}
+            </dl>
+          </section>
+
+          <section>
+            <h2>{messages.detail.licenses}</h2>
+            <dl className="license-list">
+              {(
+                [
+                  [messages.detail.codeLicense, snippet.licenses.code],
+                  [messages.detail.proseLicense, snippet.licenses.prose],
+                ] as const
+              ).map(([label, license]) => (
+                <div key={label}>
+                  <dt>{label}</dt>
+                  <dd>
+                    {LICENSE_URLS[license] ? (
+                      <a
+                        href={LICENSE_URLS[license]}
+                        rel="noreferrer"
+                        target="_blank"
+                      >
+                        {license}
+                        <span aria-hidden="true">↗</span>
+                      </a>
+                    ) : (
+                      <span>{license}</span>
+                    )}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+
+          {snippet.contributors.length ? (
+            <section>
+              <h2>{messages.detail.contributors}</h2>
+              <ul className="contributor-list">
+                {snippet.contributors.map((contributor) => (
+                  <li key={contributor.id}>
+                    {contributor.profileUrl ? (
+                      <a
+                        href={contributor.profileUrl}
+                        rel="noreferrer"
+                        target="_blank"
+                      >
+                        {contributor.displayName}
+                        <span aria-hidden="true">↗</span>
+                      </a>
+                    ) : (
+                      <span>{contributor.displayName}</span>
+                    )}
+                    <small>
+                      {contributor.roles
+                        .map((role) =>
+                          translatedEnum(
+                            messages.detail.contributorRoles,
+                            role,
+                          ),
+                        )
+                        .join(" · ")}
+                    </small>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
         </aside>
 
         <div className="detail-content">
