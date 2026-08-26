@@ -343,6 +343,16 @@ html[data-theme="dark"] .theme-icon-moon {
   display: none;
 }
 
+.locale-switcher summary svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
 .locale-switcher[open] summary {
   color: var(--purple-dark);
   border-color: rgb(115 81 207 / 28%);

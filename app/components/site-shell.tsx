@@ -319,7 +319,10 @@ export function SiteHeader({
           <ThemeToggle label={messages.navigation.theme} />
           <details className="locale-switcher" ref={localeSwitcherRef}>
             <summary aria-label={messages.navigation.language}>
-              <span aria-hidden="true">◎</span>
+              <svg aria-hidden="true" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="9" />
+                <path d="M3.5 9h17M3.5 15h17M12 3c2.25 2.45 3.4 5.45 3.4 9S14.25 18.55 12 21M12 3C9.75 5.45 8.6 8.45 8.6 12s1.15 6.55 3.4 9" />
+              </svg>
               <span>{localeLabels[locale]}</span>
             </summary>
             <div className="locale-menu">
