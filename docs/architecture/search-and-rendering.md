@@ -18,6 +18,23 @@ source copying; and SVG/PNG export. A future block representation can render
 through a different component because selection is based on the revision's
 representation discriminator.
 
+## Snippet-description Markdown
+
+`body_markdown` is rendered as GitHub-flavored Markdown on the snippet detail
+route with `react-markdown` and `remark-gfm`, producing React elements directly
+instead of injecting an HTML string. Raw HTML is escaped, and unsafe link
+protocols are removed. A small Remark plugin also preserves the legacy project's
+Scratch-specific authoring syntax:
+
+- `<scratchblocks>...</scratchblocks>` renders a multi-line script with copy and
+  image-export actions.
+- `<sb>...</sb>` renders an inline block.
+- `<go-to-block script-id:block-path>...</go-to-block>` scrolls to and highlights
+  a block in the matching main script.
+
+The server response contains readable Scratch source as a fallback. Browser-side
+enhancement uses the same style and translation preferences as main scripts.
+
 ## Search document lifecycle
 
 Publication services rebuild `search_documents` in the same D1 batch as the

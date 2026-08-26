@@ -9,6 +9,11 @@ import {
   loadScratchblocksApi,
 } from "./scratchblocks-api";
 import { useScratchblocksConfig } from "./scratchblocks-config";
+import {
+  GO_TO_SCRATCHBLOCK_EVENT,
+  highlightScratchblock,
+  type GoToScratchblockDetail,
+} from "./scratchblocks-navigation";
 
 export interface ScratchblocksLabels {
   copy: string;
@@ -43,6 +48,7 @@ export function ScratchblocksRenderer({
   const canvasRef = useRef<HTMLDivElement>(null);
   const documentRef = useRef<Document | undefined>(undefined);
   const viewRef = useRef<DocumentView | undefined>(undefined);
+  const pendingBlockPathRef = useRef<string | undefined>(undefined);
   const feedbackTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const { catHats, scale, style, translation } = useScratchblocksConfig();
   const [rendered, setRendered] = useState(false);
@@ -83,6 +89,10 @@ export function ScratchblocksRenderer({
         canvasRef.current.replaceChildren(svg);
         documentRef.current = doc;
         viewRef.current = view;
+        if (pendingBlockPathRef.current) {
+          highlightScratchblock(view, pendingBlockPathRef.current);
+          pendingBlockPathRef.current = undefined;
+        }
         setRendered(true);
       } catch (error) {
         if (!cancelled) {
@@ -111,6 +121,22 @@ export function ScratchblocksRenderer({
     },
     [],
   );
+
+  useEffect(() => {
+    function handleGoToBlock(event: Event) {
+      const detail = (event as CustomEvent<GoToScratchblockDetail>).detail;
+      if (detail?.scriptKey !== scriptKey) return;
+      if (viewRef.current) {
+        highlightScratchblock(viewRef.current, detail.blockPath);
+      } else {
+        pendingBlockPathRef.current = detail.blockPath;
+      }
+    }
+
+    window.addEventListener(GO_TO_SCRATCHBLOCK_EVENT, handleGoToBlock);
+    return () =>
+      window.removeEventListener(GO_TO_SCRATCHBLOCK_EVENT, handleGoToBlock);
+  }, [scriptKey]);
 
   async function handleCopy() {
     const copied = await copyText(documentRef.current?.stringify() || source);

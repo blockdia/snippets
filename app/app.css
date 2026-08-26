@@ -1831,6 +1831,129 @@ html[data-theme="dark"] .theme-icon-moon {
   margin: 0 0 1em;
 }
 
+.prose-body > div > :first-child {
+  margin-top: 0;
+}
+
+.prose-body > div > :last-child {
+  margin-bottom: 0;
+}
+
+.prose-body h1,
+.prose-body h2,
+.prose-body h3,
+.prose-body h4 {
+  margin: 1.45em 0 0.55em;
+  color: var(--ink);
+  line-height: 1.25;
+}
+
+.prose-body h1 {
+  font-size: 1.55rem;
+}
+
+.prose-body h2 {
+  font-size: 1.3rem;
+}
+
+.prose-body h3 {
+  font-size: 1.08rem;
+}
+
+.prose-body ul,
+.prose-body ol {
+  margin: 0 0 1em;
+  padding-left: 1.5em;
+}
+
+.prose-body li + li {
+  margin-top: 0.28em;
+}
+
+.prose-body blockquote {
+  margin: 1.2em 0;
+  padding: 0.15em 0 0.15em 1em;
+  border-left: 3px solid #a58bdd;
+  color: #746a83;
+}
+
+.prose-body :not(pre) > code {
+  padding: 0.16em 0.4em;
+  border: 1px solid rgb(114 79 203 / 12%);
+  border-radius: 6px;
+  color: #5e438f;
+  background: #f4f0fb;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 0.86em;
+}
+
+.prose-body pre:not(.scratchblocks-source-fallback) {
+  max-width: 100%;
+  overflow-x: auto;
+  margin: 1.2em 0;
+  padding: 16px;
+  border-radius: 12px;
+  color: #ede9fa;
+  background: #27213a;
+  font-size: 0.78rem;
+  line-height: 1.65;
+}
+
+.prose-body table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  margin: 1.2em 0;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+
+.prose-body th,
+.prose-body td {
+  padding: 8px 11px;
+  border: 1px solid var(--line);
+  text-align: left;
+}
+
+.prose-body th {
+  color: #514760;
+  background: #f7f4fc;
+}
+
+.prose-body img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 12px;
+}
+
+.prose-body a,
+.go-to-block {
+  color: var(--purple-dark);
+  text-decoration-color: rgb(114 79 203 / 35%);
+  text-underline-offset: 0.16em;
+}
+
+.go-to-block {
+  font-weight: 720;
+}
+
+.markdown-scratchblocks-block {
+  display: block;
+  margin: 1.25em 0;
+}
+
+.markdown-scratchblocks-inline,
+.markdown-scratchblocks-inline-canvas {
+  display: inline-flex;
+  max-width: 100%;
+  vertical-align: middle;
+}
+
+.markdown-scratchblocks-inline-canvas > svg {
+  display: block;
+  max-width: 100%;
+}
+
 .site-footer {
   display: grid;
   width: min(1180px, calc(100% - 48px));
@@ -2252,6 +2375,34 @@ html[data-theme="dark"] .detail-sidebar h2,
 html[data-theme="dark"] .symbols-table tbody td,
 html[data-theme="dark"] .prose-body {
   color: #c5bdcf;
+}
+
+html[data-theme="dark"] .prose-body h1,
+html[data-theme="dark"] .prose-body h2,
+html[data-theme="dark"] .prose-body h3,
+html[data-theme="dark"] .prose-body h4 {
+  color: #eeeaf5;
+}
+
+html[data-theme="dark"] .prose-body blockquote {
+  color: #b7aec5;
+  border-left-color: #7159a9;
+}
+
+html[data-theme="dark"] .prose-body :not(pre) > code {
+  color: #d5c8ff;
+  border-color: var(--line);
+  background: #302744;
+}
+
+html[data-theme="dark"] .prose-body th {
+  color: #d0c8da;
+  background: #292332;
+}
+
+html[data-theme="dark"] .prose-body a,
+html[data-theme="dark"] .go-to-block {
+  color: #c5b5ff;
 }
 
 html[data-theme="dark"] .available-locales a {

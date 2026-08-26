@@ -5,6 +5,7 @@ import { CopyButton } from "../components/copy-button";
 import { ScratchblocksRenderer } from "../components/scratchblocks-renderer";
 import { ShareButton } from "../components/share-button";
 import { SnippetDemo } from "../components/snippet-demo";
+import { SnippetMarkdown } from "../components/snippet-markdown";
 import { SnippetToc, type SnippetTocItem } from "../components/snippet-toc";
 import { publicPageHeaders } from "../http/public-page";
 import { getMessages } from "../i18n/messages";
@@ -16,6 +17,7 @@ import {
 import { platformContext } from "../platform/context";
 import { canonicalUrl, requireRouteLocale } from "../routing/locale.server";
 import { resolvePublishedSnippet } from "../services/snippets.server";
+import { scratchblocksScriptAnchorId } from "../markdown/render";
 
 export async function loader({ context, params, request }: Route.LoaderArgs) {
   const locale = requireRouteLocale(params.locale);
@@ -99,26 +101,6 @@ export function meta({ loaderData }: Route.MetaArgs) {
 
 export const headers = publicPageHeaders;
 
-function bodyParagraphs(markdown: string): string[] {
-  return markdown
-    .split(/\n\s*\n/)
-    .map((paragraph) => paragraph.trim())
-    .filter(Boolean);
-}
-
-function scriptAnchorId(scriptKey: string): string {
-  let hash = 0;
-  for (const character of scriptKey) {
-    hash = (hash * 31 + character.charCodeAt(0)) >>> 0;
-  }
-  const readable = scriptKey
-    .toLowerCase()
-    .replace(/[^a-z0-9_-]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 48);
-  return `script-${readable || "item"}-${hash.toString(36)}`;
-}
-
 function translatedEnum(values: Record<string, string>, value: string): string {
   return values[value] ?? value;
 }
@@ -168,7 +150,7 @@ export default function SnippetDetail({ loaderData }: Route.ComponentProps) {
           ? []
           : [
               {
-                id: scriptAnchorId(script.key),
+                id: scratchblocksScriptAnchorId(script.key),
                 label: scriptTitles.get(script.key) ?? script.key,
               },
             ],
@@ -439,7 +421,7 @@ export default function SnippetDetail({ loaderData }: Route.ComponentProps) {
                 ) : (
                   <article
                     className="script-source"
-                    id={scriptAnchorId(script.key)}
+                    id={scratchblocksScriptAnchorId(script.key)}
                     key={script.key}
                   >
                     <h3>{scriptTitles.get(script.key)}</h3>
@@ -537,11 +519,19 @@ export default function SnippetDetail({ loaderData }: Route.ComponentProps) {
               <p className="eyebrow">{messages.detail.about}</p>
               <h2>{messages.detail.about}</h2>
               <div className="prose-body">
-                {bodyParagraphs(snippet.localization.bodyMarkdown).map(
-                  (paragraph, index) => (
-                    <p key={index}>{paragraph}</p>
-                  ),
-                )}
+                <SnippetMarkdown
+                  labels={{
+                    copy: messages.detail.copyCode,
+                    copied: messages.detail.copied,
+                    copyFailed: messages.detail.copyFailed,
+                    exportSvg: messages.detail.exportSvg,
+                    exportPng: messages.detail.exportPng,
+                    renderFailed: messages.detail.renderFailed,
+                    codePreview: messages.detail.codePreview,
+                  }}
+                  locale={snippet.localization.locale}
+                  markdown={snippet.localization.bodyMarkdown}
+                />
               </div>
             </section>
           ) : null}
