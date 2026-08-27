@@ -1,3 +1,5 @@
+import { ProgressProvider, useProgress } from "@bprogress/react";
+import { useEffect } from "react";
 import {
   isRouteErrorResponse,
   Links,
@@ -6,6 +8,7 @@ import {
   Scripts,
   ScrollRestoration,
   useLocation,
+  useNavigation,
 } from "react-router";
 
 import type { Route } from "./+types/root";
@@ -34,6 +37,24 @@ const themeInitializationScript = `
   })();
 `;
 
+function NavigationProgress() {
+  const navigation = useNavigation();
+  const { start, stop } = useProgress();
+  const isNavigating = Boolean(navigation.location);
+
+  useEffect(() => {
+    if (!isNavigating) {
+      stop();
+      return;
+    }
+
+    const timer = window.setTimeout(() => start(0.08), 120);
+    return () => window.clearTimeout(timer);
+  }, [isNavigating, start, stop]);
+
+  return null;
+}
+
 export function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const locale =
@@ -52,7 +73,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        {children}
+        <ProgressProvider
+          color="var(--purple)"
+          height="3px"
+          options={{ showSpinner: false }}
+        >
+          <NavigationProgress />
+          {children}
+        </ProgressProvider>
         <ScrollRestoration />
         <Scripts />
       </body>
