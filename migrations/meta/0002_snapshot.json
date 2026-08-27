@@ -1,0 +1,1968 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "31a996f8-ce49-4346-b52b-610c514bc9a9",
+  "prevId": "6a10d286-ecd5-4532-9c2b-d67be518e142",
+  "tables": {
+    "artifacts": {
+      "name": "artifacts",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "revision_id": {
+          "name": "revision_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "artifact_key": {
+          "name": "artifact_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "kind": {
+          "name": "kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "storage": {
+          "name": "storage",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "storage_key": {
+          "name": "storage_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "content_type": {
+          "name": "content_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "byte_size": {
+          "name": "byte_size",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sha256": {
+          "name": "sha256",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "license": {
+          "name": "license",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'CC-BY-4.0'"
+        },
+        "attribution": {
+          "name": "attribution",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        }
+      },
+      "indexes": {
+        "artifacts_key_unique": {
+          "name": "artifacts_key_unique",
+          "columns": ["revision_id", "artifact_key"],
+          "isUnique": true
+        },
+        "artifacts_revision_idx": {
+          "name": "artifacts_revision_idx",
+          "columns": ["revision_id"],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "artifacts_revision_id_snippet_revisions_id_fk": {
+          "name": "artifacts_revision_id_snippet_revisions_id_fk",
+          "tableFrom": "artifacts",
+          "tableTo": "snippet_revisions",
+          "columnsFrom": ["revision_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "artifacts_kind_valid": {
+          "name": "artifacts_kind_valid",
+          "value": "\"artifacts\".\"kind\" IN ('sb3', 'image', 'attachment')"
+        },
+        "artifacts_storage_valid": {
+          "name": "artifacts_storage_valid",
+          "value": "\"artifacts\".\"storage\" = 'r2'"
+        },
+        "artifacts_size_nonnegative": {
+          "name": "artifacts_size_nonnegative",
+          "value": "\"artifacts\".\"byte_size\" >= 0"
+        },
+        "artifacts_integrity_not_empty": {
+          "name": "artifacts_integrity_not_empty",
+          "value": "\"artifacts\".\"storage_key\" <> '' AND \"artifacts\".\"sha256\" <> ''"
+        }
+      }
+    },
+    "contributors": {
+      "name": "contributors",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "kind": {
+          "name": "kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "external_id": {
+          "name": "external_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "display_name": {
+          "name": "display_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "profile_url": {
+          "name": "profile_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        }
+      },
+      "indexes": {
+        "contributors_external_unique": {
+          "name": "contributors_external_unique",
+          "columns": ["kind", "external_id"],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "contributors_kind_valid": {
+          "name": "contributors_kind_valid",
+          "value": "\"contributors\".\"kind\" IN ('user', 'github', 'scratch', 'name', 'organization')"
+        },
+        "contributors_display_name_not_empty": {
+          "name": "contributors_display_name_not_empty",
+          "value": "\"contributors\".\"display_name\" <> ''"
+        }
+      }
+    },
+    "locales": {
+      "name": "locales",
+      "columns": {
+        "code": {
+          "name": "code",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "url_segment": {
+          "name": "url_segment",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "enabled": {
+          "name": "enabled",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        }
+      },
+      "indexes": {
+        "locales_url_segment_unique": {
+          "name": "locales_url_segment_unique",
+          "columns": ["url_segment"],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "locales_code_not_empty": {
+          "name": "locales_code_not_empty",
+          "value": "\"locales\".\"code\" <> ''"
+        },
+        "locales_code_no_underscore": {
+          "name": "locales_code_no_underscore",
+          "value": "\"locales\".\"code\" NOT GLOB '*_*'"
+        },
+        "locales_url_segment_canonical": {
+          "name": "locales_url_segment_canonical",
+          "value": "\"locales\".\"url_segment\" <> '' AND \"locales\".\"url_segment\" = lower(\"locales\".\"url_segment\") AND \"locales\".\"url_segment\" NOT GLOB '*_*'"
+        }
+      }
+    },
+    "search_documents": {
+      "name": "search_documents",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "snippet_id": {
+          "name": "snippet_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "locale": {
+          "name": "locale",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "revision_id": {
+          "name": "revision_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "localization_revision_id": {
+          "name": "localization_revision_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "summary": {
+          "name": "summary",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "body": {
+          "name": "body",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "''"
+        },
+        "keywords": {
+          "name": "keywords",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "''"
+        },
+        "scripts": {
+          "name": "scripts",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "''"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        }
+      },
+      "indexes": {
+        "search_documents_snippet_locale_unique": {
+          "name": "search_documents_snippet_locale_unique",
+          "columns": ["snippet_id", "locale"],
+          "isUnique": true
+        },
+        "search_documents_localization_revision_unique": {
+          "name": "search_documents_localization_revision_unique",
+          "columns": ["localization_revision_id"],
+          "isUnique": true
+        },
+        "search_documents_locale_idx": {
+          "name": "search_documents_locale_idx",
+          "columns": ["locale", "snippet_id"],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "search_documents_snippet_id_snippets_id_fk": {
+          "name": "search_documents_snippet_id_snippets_id_fk",
+          "tableFrom": "search_documents",
+          "tableTo": "snippets",
+          "columnsFrom": ["snippet_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "search_documents_locale_locales_code_fk": {
+          "name": "search_documents_locale_locales_code_fk",
+          "tableFrom": "search_documents",
+          "tableTo": "locales",
+          "columnsFrom": ["locale"],
+          "columnsTo": ["code"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "search_documents_revision_id_snippet_revisions_id_fk": {
+          "name": "search_documents_revision_id_snippet_revisions_id_fk",
+          "tableFrom": "search_documents",
+          "tableTo": "snippet_revisions",
+          "columnsFrom": ["revision_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "search_documents_localization_revision_id_snippet_localization_revisions_id_fk": {
+          "name": "search_documents_localization_revision_id_snippet_localization_revisions_id_fk",
+          "tableFrom": "search_documents",
+          "tableTo": "snippet_localization_revisions",
+          "columnsFrom": ["localization_revision_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "snippet_localization_publications": {
+      "name": "snippet_localization_publications",
+      "columns": {
+        "localization_id": {
+          "name": "localization_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "localization_revision_id": {
+          "name": "localization_revision_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "published_at": {
+          "name": "published_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        }
+      },
+      "indexes": {
+        "snippet_localization_publications_revision_unique": {
+          "name": "snippet_localization_publications_revision_unique",
+          "columns": ["localization_revision_id"],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "snippet_localization_publications_localization_id_snippet_localizations_id_fk": {
+          "name": "snippet_localization_publications_localization_id_snippet_localizations_id_fk",
+          "tableFrom": "snippet_localization_publications",
+          "tableTo": "snippet_localizations",
+          "columnsFrom": ["localization_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "snippet_localization_publications_localization_revision_id_snippet_localization_revisions_id_fk": {
+          "name": "snippet_localization_publications_localization_revision_id_snippet_localization_revisions_id_fk",
+          "tableFrom": "snippet_localization_publications",
+          "tableTo": "snippet_localization_revisions",
+          "columnsFrom": ["localization_revision_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "snippet_localization_publications_owned_revision_fk": {
+          "name": "snippet_localization_publications_owned_revision_fk",
+          "tableFrom": "snippet_localization_publications",
+          "tableTo": "snippet_localization_revisions",
+          "columnsFrom": ["localization_id", "localization_revision_id"],
+          "columnsTo": ["localization_id", "id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "snippet_localization_revision_contributors": {
+      "name": "snippet_localization_revision_contributors",
+      "columns": {
+        "localization_revision_id": {
+          "name": "localization_revision_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "contributor_id": {
+          "name": "contributor_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "role": {
+          "name": "role",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'translator'"
+        },
+        "position": {
+          "name": "position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        }
+      },
+      "indexes": {
+        "snippet_localization_contributors_revision_idx": {
+          "name": "snippet_localization_contributors_revision_idx",
+          "columns": ["localization_revision_id", "position"],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "snippet_localization_revision_contributors_localization_revision_id_snippet_localization_revisions_id_fk": {
+          "name": "snippet_localization_revision_contributors_localization_revision_id_snippet_localization_revisions_id_fk",
+          "tableFrom": "snippet_localization_revision_contributors",
+          "tableTo": "snippet_localization_revisions",
+          "columnsFrom": ["localization_revision_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "snippet_localization_revision_contributors_contributor_id_contributors_id_fk": {
+          "name": "snippet_localization_revision_contributors_contributor_id_contributors_id_fk",
+          "tableFrom": "snippet_localization_revision_contributors",
+          "tableTo": "contributors",
+          "columnsFrom": ["contributor_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "snippet_localization_revision_contributors_localization_revision_id_contributor_id_role_pk": {
+          "columns": ["localization_revision_id", "contributor_id", "role"],
+          "name": "snippet_localization_revision_contributors_localization_revision_id_contributor_id_role_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "snippet_localization_contributors_role_valid": {
+          "name": "snippet_localization_contributors_role_valid",
+          "value": "\"snippet_localization_revision_contributors\".\"role\" IN ('translator', 'reviewer', 'source')"
+        },
+        "snippet_localization_contributors_position_nonnegative": {
+          "name": "snippet_localization_contributors_position_nonnegative",
+          "value": "\"snippet_localization_revision_contributors\".\"position\" >= 0"
+        }
+      }
+    },
+    "snippet_localization_revision_scripts": {
+      "name": "snippet_localization_revision_scripts",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "localization_revision_id": {
+          "name": "localization_revision_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "script_key": {
+          "name": "script_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source": {
+          "name": "source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "snippet_localization_scripts_key_unique": {
+          "name": "snippet_localization_scripts_key_unique",
+          "columns": ["localization_revision_id", "script_key"],
+          "isUnique": true
+        },
+        "snippet_localization_scripts_revision_idx": {
+          "name": "snippet_localization_scripts_revision_idx",
+          "columns": ["localization_revision_id"],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "snippet_localization_revision_scripts_localization_revision_id_snippet_localization_revisions_id_fk": {
+          "name": "snippet_localization_revision_scripts_localization_revision_id_snippet_localization_revisions_id_fk",
+          "tableFrom": "snippet_localization_revision_scripts",
+          "tableTo": "snippet_localization_revisions",
+          "columnsFrom": ["localization_revision_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "snippet_localization_scripts_key_not_empty": {
+          "name": "snippet_localization_scripts_key_not_empty",
+          "value": "\"snippet_localization_revision_scripts\".\"script_key\" <> ''"
+        },
+        "snippet_localization_scripts_source_not_empty": {
+          "name": "snippet_localization_scripts_source_not_empty",
+          "value": "\"snippet_localization_revision_scripts\".\"source\" <> ''"
+        }
+      }
+    },
+    "snippet_localization_revision_units": {
+      "name": "snippet_localization_revision_units",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "localization_revision_id": {
+          "name": "localization_revision_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "unit_key": {
+          "name": "unit_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "translated_text": {
+          "name": "translated_text",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "snippet_localization_units_key_unique": {
+          "name": "snippet_localization_units_key_unique",
+          "columns": ["localization_revision_id", "unit_key"],
+          "isUnique": true
+        },
+        "snippet_localization_units_revision_idx": {
+          "name": "snippet_localization_units_revision_idx",
+          "columns": ["localization_revision_id"],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "snippet_localization_revision_units_localization_revision_id_snippet_localization_revisions_id_fk": {
+          "name": "snippet_localization_revision_units_localization_revision_id_snippet_localization_revisions_id_fk",
+          "tableFrom": "snippet_localization_revision_units",
+          "tableTo": "snippet_localization_revisions",
+          "columnsFrom": ["localization_revision_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "snippet_localization_units_key_not_empty": {
+          "name": "snippet_localization_units_key_not_empty",
+          "value": "\"snippet_localization_revision_units\".\"unit_key\" <> ''"
+        }
+      }
+    },
+    "snippet_localization_revisions": {
+      "name": "snippet_localization_revisions",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "localization_id": {
+          "name": "localization_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "revision_number": {
+          "name": "revision_number",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'draft'"
+        },
+        "translation_basis_hash": {
+          "name": "translation_basis_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source_revision_id": {
+          "name": "source_revision_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "summary": {
+          "name": "summary",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "seo_title": {
+          "name": "seo_title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "seo_description": {
+          "name": "seo_description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "body_markdown": {
+          "name": "body_markdown",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "''"
+        },
+        "keywords": {
+          "name": "keywords",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'[]'"
+        },
+        "prose_license": {
+          "name": "prose_license",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'CC-BY-SA-4.0'"
+        },
+        "source_kind": {
+          "name": "source_kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'editorial'"
+        },
+        "source_ref": {
+          "name": "source_ref",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        },
+        "published_at": {
+          "name": "published_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "snippet_localization_revisions_number_unique": {
+          "name": "snippet_localization_revisions_number_unique",
+          "columns": ["localization_id", "revision_number"],
+          "isUnique": true
+        },
+        "snippet_localization_revisions_owner_unique": {
+          "name": "snippet_localization_revisions_owner_unique",
+          "columns": ["localization_id", "id"],
+          "isUnique": true
+        },
+        "snippet_localization_revisions_basis_idx": {
+          "name": "snippet_localization_revisions_basis_idx",
+          "columns": ["localization_id", "translation_basis_hash", "status"],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "snippet_localization_revisions_localization_id_snippet_localizations_id_fk": {
+          "name": "snippet_localization_revisions_localization_id_snippet_localizations_id_fk",
+          "tableFrom": "snippet_localization_revisions",
+          "tableTo": "snippet_localizations",
+          "columnsFrom": ["localization_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "snippet_localization_revisions_source_revision_id_snippet_revisions_id_fk": {
+          "name": "snippet_localization_revisions_source_revision_id_snippet_revisions_id_fk",
+          "tableFrom": "snippet_localization_revisions",
+          "tableTo": "snippet_revisions",
+          "columnsFrom": ["source_revision_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "snippet_localization_revisions_number_positive": {
+          "name": "snippet_localization_revisions_number_positive",
+          "value": "\"snippet_localization_revisions\".\"revision_number\" > 0"
+        },
+        "snippet_localization_revisions_status_valid": {
+          "name": "snippet_localization_revisions_status_valid",
+          "value": "\"snippet_localization_revisions\".\"status\" IN ('draft', 'published', 'withdrawn')"
+        },
+        "snippet_localization_revisions_basis_valid": {
+          "name": "snippet_localization_revisions_basis_valid",
+          "value": "\"snippet_localization_revisions\".\"translation_basis_hash\" GLOB 'translation-basis-v*:*'"
+        },
+        "snippet_localization_revisions_source_kind_valid": {
+          "name": "snippet_localization_revisions_source_kind_valid",
+          "value": "\"snippet_localization_revisions\".\"source_kind\" IN ('editorial', 'legacy-import', 'user-submission', 'api')"
+        },
+        "snippet_localization_revisions_content_not_empty": {
+          "name": "snippet_localization_revisions_content_not_empty",
+          "value": "\"snippet_localization_revisions\".\"title\" <> '' AND \"snippet_localization_revisions\".\"summary\" <> ''"
+        },
+        "snippet_localization_revisions_publication_consistent": {
+          "name": "snippet_localization_revisions_publication_consistent",
+          "value": "(\"snippet_localization_revisions\".\"status\" = 'published' AND \"snippet_localization_revisions\".\"published_at\" IS NOT NULL) OR (\"snippet_localization_revisions\".\"status\" <> 'published')"
+        }
+      }
+    },
+    "snippet_localizations": {
+      "name": "snippet_localizations",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "snippet_id": {
+          "name": "snippet_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "locale": {
+          "name": "locale",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        }
+      },
+      "indexes": {
+        "snippet_localizations_locale_unique": {
+          "name": "snippet_localizations_locale_unique",
+          "columns": ["snippet_id", "locale"],
+          "isUnique": true
+        },
+        "snippet_localizations_owner_unique": {
+          "name": "snippet_localizations_owner_unique",
+          "columns": ["snippet_id", "id"],
+          "isUnique": true
+        },
+        "snippet_localizations_locale_idx": {
+          "name": "snippet_localizations_locale_idx",
+          "columns": ["locale", "snippet_id"],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "snippet_localizations_snippet_id_snippets_id_fk": {
+          "name": "snippet_localizations_snippet_id_snippets_id_fk",
+          "tableFrom": "snippet_localizations",
+          "tableTo": "snippets",
+          "columnsFrom": ["snippet_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "snippet_localizations_locale_locales_code_fk": {
+          "name": "snippet_localizations_locale_locales_code_fk",
+          "tableFrom": "snippet_localizations",
+          "tableTo": "locales",
+          "columnsFrom": ["locale"],
+          "columnsTo": ["code"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "snippet_publications": {
+      "name": "snippet_publications",
+      "columns": {
+        "snippet_id": {
+          "name": "snippet_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "revision_id": {
+          "name": "revision_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "published_at": {
+          "name": "published_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        }
+      },
+      "indexes": {
+        "snippet_publications_revision_unique": {
+          "name": "snippet_publications_revision_unique",
+          "columns": ["revision_id"],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "snippet_publications_snippet_id_snippets_id_fk": {
+          "name": "snippet_publications_snippet_id_snippets_id_fk",
+          "tableFrom": "snippet_publications",
+          "tableTo": "snippets",
+          "columnsFrom": ["snippet_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "snippet_publications_revision_id_snippet_revisions_id_fk": {
+          "name": "snippet_publications_revision_id_snippet_revisions_id_fk",
+          "tableFrom": "snippet_publications",
+          "tableTo": "snippet_revisions",
+          "columnsFrom": ["revision_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "snippet_publications_owned_revision_fk": {
+          "name": "snippet_publications_owned_revision_fk",
+          "tableFrom": "snippet_publications",
+          "tableTo": "snippet_revisions",
+          "columnsFrom": ["snippet_id", "revision_id"],
+          "columnsTo": ["snippet_id", "id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "snippet_revision_contributors": {
+      "name": "snippet_revision_contributors",
+      "columns": {
+        "revision_id": {
+          "name": "revision_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "contributor_id": {
+          "name": "contributor_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "role": {
+          "name": "role",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'author'"
+        },
+        "position": {
+          "name": "position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        }
+      },
+      "indexes": {
+        "snippet_revision_contributors_revision_idx": {
+          "name": "snippet_revision_contributors_revision_idx",
+          "columns": ["revision_id", "position"],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "snippet_revision_contributors_revision_id_snippet_revisions_id_fk": {
+          "name": "snippet_revision_contributors_revision_id_snippet_revisions_id_fk",
+          "tableFrom": "snippet_revision_contributors",
+          "tableTo": "snippet_revisions",
+          "columnsFrom": ["revision_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "snippet_revision_contributors_contributor_id_contributors_id_fk": {
+          "name": "snippet_revision_contributors_contributor_id_contributors_id_fk",
+          "tableFrom": "snippet_revision_contributors",
+          "tableTo": "contributors",
+          "columnsFrom": ["contributor_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "snippet_revision_contributors_revision_id_contributor_id_role_pk": {
+          "columns": ["revision_id", "contributor_id", "role"],
+          "name": "snippet_revision_contributors_revision_id_contributor_id_role_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "snippet_revision_contributors_role_valid": {
+          "name": "snippet_revision_contributors_role_valid",
+          "value": "\"snippet_revision_contributors\".\"role\" IN ('author', 'maintainer', 'source')"
+        },
+        "snippet_revision_contributors_position_nonnegative": {
+          "name": "snippet_revision_contributors_position_nonnegative",
+          "value": "\"snippet_revision_contributors\".\"position\" >= 0"
+        }
+      }
+    },
+    "snippet_revision_references": {
+      "name": "snippet_revision_references",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "revision_id": {
+          "name": "revision_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "reference_key": {
+          "name": "reference_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "kind": {
+          "name": "kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'other'"
+        },
+        "url": {
+          "name": "url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "title_unit_key": {
+          "name": "title_unit_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "position": {
+          "name": "position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "snippet_revision_references_key_unique": {
+          "name": "snippet_revision_references_key_unique",
+          "columns": ["revision_id", "reference_key"],
+          "isUnique": true
+        },
+        "snippet_revision_references_revision_idx": {
+          "name": "snippet_revision_references_revision_idx",
+          "columns": ["revision_id", "position"],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "snippet_revision_references_revision_id_snippet_revisions_id_fk": {
+          "name": "snippet_revision_references_revision_id_snippet_revisions_id_fk",
+          "tableFrom": "snippet_revision_references",
+          "tableTo": "snippet_revisions",
+          "columnsFrom": ["revision_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "snippet_revision_references_kind_valid": {
+          "name": "snippet_revision_references_kind_valid",
+          "value": "\"snippet_revision_references\".\"kind\" IN ('article', 'project', 'video', 'extension', 'repository', 'other')"
+        },
+        "snippet_revision_references_url_not_empty": {
+          "name": "snippet_revision_references_url_not_empty",
+          "value": "\"snippet_revision_references\".\"url\" <> ''"
+        },
+        "snippet_revision_references_position_nonnegative": {
+          "name": "snippet_revision_references_position_nonnegative",
+          "value": "\"snippet_revision_references\".\"position\" >= 0"
+        }
+      }
+    },
+    "snippet_revision_scripts": {
+      "name": "snippet_revision_scripts",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "revision_id": {
+          "name": "revision_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "script_key": {
+          "name": "script_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "position": {
+          "name": "position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source": {
+          "name": "source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "snippet_revision_scripts_key_unique": {
+          "name": "snippet_revision_scripts_key_unique",
+          "columns": ["revision_id", "script_key"],
+          "isUnique": true
+        },
+        "snippet_revision_scripts_position_unique": {
+          "name": "snippet_revision_scripts_position_unique",
+          "columns": ["revision_id", "position"],
+          "isUnique": true
+        },
+        "snippet_revision_scripts_revision_idx": {
+          "name": "snippet_revision_scripts_revision_idx",
+          "columns": ["revision_id", "position"],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "snippet_revision_scripts_revision_id_snippet_revisions_id_fk": {
+          "name": "snippet_revision_scripts_revision_id_snippet_revisions_id_fk",
+          "tableFrom": "snippet_revision_scripts",
+          "tableTo": "snippet_revisions",
+          "columnsFrom": ["revision_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "snippet_revision_scripts_key_not_empty": {
+          "name": "snippet_revision_scripts_key_not_empty",
+          "value": "\"snippet_revision_scripts\".\"script_key\" <> ''"
+        },
+        "snippet_revision_scripts_position_nonnegative": {
+          "name": "snippet_revision_scripts_position_nonnegative",
+          "value": "\"snippet_revision_scripts\".\"position\" >= 0"
+        },
+        "snippet_revision_scripts_source_not_empty": {
+          "name": "snippet_revision_scripts_source_not_empty",
+          "value": "\"snippet_revision_scripts\".\"source\" <> ''"
+        }
+      }
+    },
+    "snippet_revision_symbols": {
+      "name": "snippet_revision_symbols",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "revision_id": {
+          "name": "revision_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "symbol_key": {
+          "name": "symbol_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "kind": {
+          "name": "kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "scope": {
+          "name": "scope",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name_unit_key": {
+          "name": "name_unit_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "position": {
+          "name": "position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "snippet_revision_symbols_key_unique": {
+          "name": "snippet_revision_symbols_key_unique",
+          "columns": ["revision_id", "symbol_key"],
+          "isUnique": true
+        },
+        "snippet_revision_symbols_revision_idx": {
+          "name": "snippet_revision_symbols_revision_idx",
+          "columns": ["revision_id", "position"],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "snippet_revision_symbols_revision_id_snippet_revisions_id_fk": {
+          "name": "snippet_revision_symbols_revision_id_snippet_revisions_id_fk",
+          "tableFrom": "snippet_revision_symbols",
+          "tableTo": "snippet_revisions",
+          "columnsFrom": ["revision_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "snippet_revision_symbols_key_not_empty": {
+          "name": "snippet_revision_symbols_key_not_empty",
+          "value": "\"snippet_revision_symbols\".\"symbol_key\" <> ''"
+        },
+        "snippet_revision_symbols_kind_valid": {
+          "name": "snippet_revision_symbols_kind_valid",
+          "value": "\"snippet_revision_symbols\".\"kind\" IN ('variable', 'list', 'broadcast', 'custom-argument')"
+        },
+        "snippet_revision_symbols_scope_valid": {
+          "name": "snippet_revision_symbols_scope_valid",
+          "value": "\"snippet_revision_symbols\".\"scope\" IN ('global', 'sprite', 'local', 'choose')"
+        },
+        "snippet_revision_symbols_position_nonnegative": {
+          "name": "snippet_revision_symbols_position_nonnegative",
+          "value": "\"snippet_revision_symbols\".\"position\" >= 0"
+        }
+      }
+    },
+    "snippet_revision_tags": {
+      "name": "snippet_revision_tags",
+      "columns": {
+        "revision_id": {
+          "name": "revision_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "tag_id": {
+          "name": "tag_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "position": {
+          "name": "position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        }
+      },
+      "indexes": {
+        "snippet_revision_tags_revision_idx": {
+          "name": "snippet_revision_tags_revision_idx",
+          "columns": ["revision_id", "position"],
+          "isUnique": false
+        },
+        "snippet_revision_tags_tag_idx": {
+          "name": "snippet_revision_tags_tag_idx",
+          "columns": ["tag_id", "revision_id"],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "snippet_revision_tags_revision_id_snippet_revisions_id_fk": {
+          "name": "snippet_revision_tags_revision_id_snippet_revisions_id_fk",
+          "tableFrom": "snippet_revision_tags",
+          "tableTo": "snippet_revisions",
+          "columnsFrom": ["revision_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "snippet_revision_tags_tag_id_tags_id_fk": {
+          "name": "snippet_revision_tags_tag_id_tags_id_fk",
+          "tableFrom": "snippet_revision_tags",
+          "tableTo": "tags",
+          "columnsFrom": ["tag_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "snippet_revision_tags_revision_id_tag_id_pk": {
+          "columns": ["revision_id", "tag_id"],
+          "name": "snippet_revision_tags_revision_id_tag_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "snippet_revision_tags_position_nonnegative": {
+          "name": "snippet_revision_tags_position_nonnegative",
+          "value": "\"snippet_revision_tags\".\"position\" >= 0"
+        }
+      }
+    },
+    "snippet_revision_translation_units": {
+      "name": "snippet_revision_translation_units",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "revision_id": {
+          "name": "revision_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "unit_key": {
+          "name": "unit_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "kind": {
+          "name": "kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "position": {
+          "name": "position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source_text": {
+          "name": "source_text",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "snippet_revision_units_key_unique": {
+          "name": "snippet_revision_units_key_unique",
+          "columns": ["revision_id", "unit_key"],
+          "isUnique": true
+        },
+        "snippet_revision_units_position_unique": {
+          "name": "snippet_revision_units_position_unique",
+          "columns": ["revision_id", "position"],
+          "isUnique": true
+        },
+        "snippet_revision_units_revision_idx": {
+          "name": "snippet_revision_units_revision_idx",
+          "columns": ["revision_id", "position"],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "snippet_revision_translation_units_revision_id_snippet_revisions_id_fk": {
+          "name": "snippet_revision_translation_units_revision_id_snippet_revisions_id_fk",
+          "tableFrom": "snippet_revision_translation_units",
+          "tableTo": "snippet_revisions",
+          "columnsFrom": ["revision_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "snippet_revision_units_key_not_empty": {
+          "name": "snippet_revision_units_key_not_empty",
+          "value": "\"snippet_revision_translation_units\".\"unit_key\" <> ''"
+        },
+        "snippet_revision_units_kind_valid": {
+          "name": "snippet_revision_units_kind_valid",
+          "value": "\"snippet_revision_translation_units\".\"kind\" IN ('script-title', 'symbol', 'procedure', 'comment', 'reference')"
+        },
+        "snippet_revision_units_position_nonnegative": {
+          "name": "snippet_revision_units_position_nonnegative",
+          "value": "\"snippet_revision_translation_units\".\"position\" >= 0"
+        }
+      }
+    },
+    "snippet_revisions": {
+      "name": "snippet_revisions",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "snippet_id": {
+          "name": "snippet_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "revision_number": {
+          "name": "revision_number",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'draft'"
+        },
+        "content_schema_version": {
+          "name": "content_schema_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 1
+        },
+        "representation": {
+          "name": "representation",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'scratchblocks'"
+        },
+        "representation_version": {
+          "name": "representation_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 1
+        },
+        "content_hash": {
+          "name": "content_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "translation_basis_hash": {
+          "name": "translation_basis_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "change_summary": {
+          "name": "change_summary",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "code_license": {
+          "name": "code_license",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'CC0-1.0'"
+        },
+        "source_kind": {
+          "name": "source_kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'editorial'"
+        },
+        "source_ref": {
+          "name": "source_ref",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        },
+        "published_at": {
+          "name": "published_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "snippet_revisions_number_unique": {
+          "name": "snippet_revisions_number_unique",
+          "columns": ["snippet_id", "revision_number"],
+          "isUnique": true
+        },
+        "snippet_revisions_owner_unique": {
+          "name": "snippet_revisions_owner_unique",
+          "columns": ["snippet_id", "id"],
+          "isUnique": true
+        },
+        "snippet_revisions_status_idx": {
+          "name": "snippet_revisions_status_idx",
+          "columns": ["snippet_id", "status"],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "snippet_revisions_snippet_id_snippets_id_fk": {
+          "name": "snippet_revisions_snippet_id_snippets_id_fk",
+          "tableFrom": "snippet_revisions",
+          "tableTo": "snippets",
+          "columnsFrom": ["snippet_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "snippet_revisions_number_positive": {
+          "name": "snippet_revisions_number_positive",
+          "value": "\"snippet_revisions\".\"revision_number\" > 0"
+        },
+        "snippet_revisions_schema_version_positive": {
+          "name": "snippet_revisions_schema_version_positive",
+          "value": "\"snippet_revisions\".\"content_schema_version\" > 0 AND \"snippet_revisions\".\"representation_version\" > 0"
+        },
+        "snippet_revisions_status_valid": {
+          "name": "snippet_revisions_status_valid",
+          "value": "\"snippet_revisions\".\"status\" IN ('draft', 'published', 'withdrawn')"
+        },
+        "snippet_revisions_representation_valid": {
+          "name": "snippet_revisions_representation_valid",
+          "value": "\"snippet_revisions\".\"representation\" IN ('scratchblocks', 'scratch-blocks-ast')"
+        },
+        "snippet_revisions_source_kind_valid": {
+          "name": "snippet_revisions_source_kind_valid",
+          "value": "\"snippet_revisions\".\"source_kind\" IN ('editorial', 'legacy-import', 'user-submission', 'api')"
+        },
+        "snippet_revisions_hashes_not_empty": {
+          "name": "snippet_revisions_hashes_not_empty",
+          "value": "\"snippet_revisions\".\"content_hash\" <> '' AND \"snippet_revisions\".\"translation_basis_hash\" GLOB 'translation-basis-v*:*'"
+        },
+        "snippet_revisions_publication_consistent": {
+          "name": "snippet_revisions_publication_consistent",
+          "value": "(\"snippet_revisions\".\"status\" = 'published' AND \"snippet_revisions\".\"published_at\" IS NOT NULL) OR (\"snippet_revisions\".\"status\" <> 'published')"
+        }
+      }
+    },
+    "snippets": {
+      "name": "snippets",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'active'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        },
+        "archived_at": {
+          "name": "archived_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "snippets_slug_unique": {
+          "name": "snippets_slug_unique",
+          "columns": ["slug"],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "snippets_slug_canonical": {
+          "name": "snippets_slug_canonical",
+          "value": "\"snippets\".\"slug\" <> '' AND \"snippets\".\"slug\" = lower(\"snippets\".\"slug\") AND \"snippets\".\"slug\" NOT GLOB '*[^a-z0-9-]*' AND \"snippets\".\"slug\" NOT GLOB '-*' AND \"snippets\".\"slug\" NOT GLOB '*-' AND \"snippets\".\"slug\" NOT GLOB '*--*'"
+        },
+        "snippets_status_valid": {
+          "name": "snippets_status_valid",
+          "value": "\"snippets\".\"status\" IN ('active', 'archived')"
+        },
+        "snippets_archive_consistent": {
+          "name": "snippets_archive_consistent",
+          "value": "(\"snippets\".\"status\" = 'archived' AND \"snippets\".\"archived_at\" IS NOT NULL) OR (\"snippets\".\"status\" = 'active' AND \"snippets\".\"archived_at\" IS NULL)"
+        }
+      }
+    },
+    "tag_localizations": {
+      "name": "tag_localizations",
+      "columns": {
+        "tag_id": {
+          "name": "tag_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "locale": {
+          "name": "locale",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "tag_localizations_locale_idx": {
+          "name": "tag_localizations_locale_idx",
+          "columns": ["locale", "name"],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "tag_localizations_tag_id_tags_id_fk": {
+          "name": "tag_localizations_tag_id_tags_id_fk",
+          "tableFrom": "tag_localizations",
+          "tableTo": "tags",
+          "columnsFrom": ["tag_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "tag_localizations_locale_locales_code_fk": {
+          "name": "tag_localizations_locale_locales_code_fk",
+          "tableFrom": "tag_localizations",
+          "tableTo": "locales",
+          "columnsFrom": ["locale"],
+          "columnsTo": ["code"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "tag_localizations_tag_id_locale_pk": {
+          "columns": ["tag_id", "locale"],
+          "name": "tag_localizations_tag_id_locale_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "tag_localizations_name_not_empty": {
+          "name": "tag_localizations_name_not_empty",
+          "value": "\"tag_localizations\".\"name\" <> ''"
+        }
+      }
+    },
+    "tags": {
+      "name": "tags",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        }
+      },
+      "indexes": {
+        "tags_slug_unique": {
+          "name": "tags_slug_unique",
+          "columns": ["slug"],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "tags_slug_canonical": {
+          "name": "tags_slug_canonical",
+          "value": "\"tags\".\"slug\" <> '' AND \"tags\".\"slug\" = lower(\"tags\".\"slug\") AND \"tags\".\"slug\" NOT GLOB '*[^a-z0-9-]*'"
+        }
+      }
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {}
+  }
+}

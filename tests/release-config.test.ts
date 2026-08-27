@@ -3,10 +3,16 @@ import { describe, expect, it } from "vitest";
 import {
   assertReleaseConfig,
   parseReleaseConfig,
+  PLACEHOLDER_ACCESS_AUD,
+  PLACEHOLDER_ACCESS_TEAM_DOMAIN,
   PLACEHOLDER_DATABASE_ID,
 } from "../app/domain/release-config";
 
 const validSource = `{
+  "vars": {
+    "ACCESS_TEAM_DOMAIN": "https://blockdia.cloudflareaccess.com",
+    "ACCESS_AUD": "0123456789abcdef0123456789abcdef"
+  },
   "d1_databases": [{
     "database_name": "snippets",
     "database_id": "123e4567-e89b-42d3-a456-426614174000"
@@ -36,5 +42,17 @@ describe("release config guard", () => {
       validSource.replace("snippets-artifacts", "public-artifacts"),
     );
     expect(() => assertReleaseConfig(config)).toThrow(/expected R2 bucket/);
+  });
+
+  it("blocks placeholder Cloudflare Access configuration", () => {
+    const config = parseReleaseConfig(
+      validSource
+        .replace(
+          "https://blockdia.cloudflareaccess.com",
+          PLACEHOLDER_ACCESS_TEAM_DOMAIN,
+        )
+        .replace("0123456789abcdef0123456789abcdef", PLACEHOLDER_ACCESS_AUD),
+    );
+    expect(() => assertReleaseConfig(config)).toThrow(/ACCESS_TEAM_DOMAIN/);
   });
 });

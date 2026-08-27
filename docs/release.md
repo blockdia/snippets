@@ -1,9 +1,10 @@
 # Production release
 
-Production releases are intentionally gated. The repository keeps an all-zero
-D1 id for local development, while `npm run deploy` refuses to publish until a
-real database id, authenticated account, migrated schema, imported content, and
-R2 bucket are all verified.
+Production releases are intentionally gated. `npm run deploy` refuses to
+publish until a real database id, authenticated account, migrated schema,
+imported content, and R2 bucket are all verified. It also refuses placeholder
+Cloudflare Access configuration, so `/admin` cannot accidentally ship without
+valid JWT checks.
 
 ## 1. Authenticate and provision once
 
@@ -20,6 +21,15 @@ npx wrangler r2 bucket create snippets-artifacts
 Copy the D1 UUID printed by `wrangler d1 create` into `database_id` in
 `wrangler.jsonc`. The UUID is a resource identifier, not a secret. Keep the R2
 bucket private; SB3 files are exposed only through the same-origin Worker route.
+
+Create a self-hosted Cloudflare Access application for the exact admin path,
+for example `snippets.blockdia.com/admin/*`. Add an Allow policy containing
+only the personal identity that should administer the site. Copy the team
+domain (for example `https://blockdia.cloudflareaccess.com`) and the
+application audience tag into `ACCESS_TEAM_DOMAIN` and `ACCESS_AUD` in
+`wrangler.jsonc`. These values identify the Access issuer and application; they
+are not credentials. The Worker still validates every admin request and fails
+closed when either value is missing or invalid.
 
 Run the local quality gate and the non-mutating config guard:
 

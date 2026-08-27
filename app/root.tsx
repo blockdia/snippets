@@ -57,9 +57,11 @@ function NavigationProgress() {
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
+  const firstSegment = location.pathname.split("/")[1] ?? "";
   const locale =
-    canonicalizeLocale(location.pathname.split("/")[1] ?? "") ??
-    CONTENT_FALLBACK_LOCALE;
+    firstSegment === "admin"
+      ? "zh-CN"
+      : (canonicalizeLocale(firstSegment) ?? CONTENT_FALLBACK_LOCALE);
 
   return (
     <html lang={locale} suppressHydrationWarning>

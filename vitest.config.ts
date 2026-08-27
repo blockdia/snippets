@@ -11,7 +11,9 @@ export default defineConfig(async () => {
       }),
     ],
     test: {
+      fileParallelism: false,
       include: ["tests/**/*.test.ts"],
+      maxWorkers: 1,
       provide: { d1Migrations },
     },
   };

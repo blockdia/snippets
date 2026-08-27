@@ -11,6 +11,8 @@ Drizzle cannot model is appended to the same reviewed migration, including:
 - the external-content FTS5 table and synchronization triggers;
 - publication eligibility checks;
 - immutability guards for published revision content.
+- the published-snippet slug immutability trigger in
+  `0002_lock_published_slugs.sql`.
 
 Do not regenerate an existing migration after those native sections have been
 reviewed and committed. New schema changes must create a new migration.

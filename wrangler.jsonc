@@ -5,9 +5,15 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "snippets",
-  "compatibility_date": "2026-08-25",
+  "compatibility_date": "2026-08-27",
   "compatibility_flags": ["nodejs_compat"],
   "main": "./workers/app.ts",
+  "vars": {
+    // Non-secret Cloudflare Access application configuration. Replace both
+    // values before production deployment; invalid placeholders fail closed.
+    "ACCESS_TEAM_DOMAIN": "https://luyifei.cloudflareaccess.com",
+    "ACCESS_AUD": "cb817626bc030d506e08b1dcc934754966fa486e70d5429d34cd12bf5e93d3ed",
+  },
   "d1_databases": [
     {
       "binding": "DB",
