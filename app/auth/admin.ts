@@ -6,6 +6,8 @@ export type AdminCapability =
   | "snippets:write"
   | "snippets:publish"
   | "snippets:archive"
+  | "feedback:read"
+  | "feedback:review"
   | "tags:manage";
 
 export interface AdminActor {
@@ -22,6 +24,8 @@ export const OWNER_CAPABILITIES = [
   "snippets:write",
   "snippets:publish",
   "snippets:archive",
+  "feedback:read",
+  "feedback:review",
   "tags:manage",
 ] as const satisfies readonly AdminCapability[];
 

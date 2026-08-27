@@ -9,6 +9,8 @@ export default [
     route("snippets", "routes/admin-snippets-index.tsx"),
     route("snippets/new", "routes/admin-snippet-new.tsx"),
     route("snippets/:snippetId", "routes/admin-snippet-editor.tsx"),
+    route("feedback", "routes/admin-feedback-index.tsx"),
+    route("feedback/:feedbackId", "routes/admin-feedback-detail.tsx"),
     route("tags", "routes/admin-tags.tsx"),
   ]),
   index("routes/root-redirect.tsx"),

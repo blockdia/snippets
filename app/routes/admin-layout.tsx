@@ -1,5 +1,6 @@
 import {
   ArrowSquareOutIcon,
+  ChatCenteredTextIcon,
   CodeBlockIcon,
   HouseIcon,
   TagIcon,
@@ -63,6 +64,12 @@ const navigation = [
     label: "Snippets",
     icon: CodeBlockIcon,
     capability: "snippets:read",
+  },
+  {
+    to: "/admin/feedback",
+    label: "反馈",
+    icon: ChatCenteredTextIcon,
+    capability: "feedback:read",
   },
   {
     to: "/admin/tags",

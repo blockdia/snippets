@@ -12,10 +12,16 @@ import {
   snippets,
 } from "../app/db/schema";
 import {
+  getAdminFeedback,
+  listAdminFeedback,
+  reviewAdminFeedback,
+} from "../app/services/admin-feedback.server";
+import {
   coarseUserAgent,
   createSnippetFeedback,
   updateSnippetFeedback,
 } from "../app/services/feedback.server";
+import { localDevelopmentActor } from "../app/auth/admin.server";
 
 const migrations = inject("d1Migrations");
 
@@ -174,5 +180,222 @@ describe("snippet feedback", () => {
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/128.0 Safari/537.36 Edg/128.0",
       ),
     ).toEqual({ browserFamily: "Edge", osFamily: "Windows" });
+  });
+});
+
+describe("admin feedback workflow", () => {
+  it("lists, filters and searches feedback without exposing client IDs", async () => {
+    const group = crypto.randomUUID();
+    const suggestion = `Use clearer translation ${group}.`;
+    const negativeTarget = await seedFeedbackTarget(`${group}-negative`);
+    const positiveTarget = await seedFeedbackTarget(`${group}-positive`);
+    const negativeClientId = crypto.randomUUID();
+    const negative = await createSnippetFeedback(negativeTarget.db, {
+      clientId: negativeClientId,
+      clientSubmissionId: crypto.randomUUID(),
+      snippetId: negativeTarget.snippetId,
+      revisionId: negativeTarget.revisionId,
+      localizationRevisionId: negativeTarget.localizationRevisionId,
+      requestedLocale: "zh-CN",
+      contentLocale: "en",
+      helpful: false,
+      pagePath: "/zh-cn/snippets/feedback-test",
+      entryReferrerKind: "internal",
+      deviceCategory: "phone",
+      viewportBucket: "xs",
+      inputMode: "touch",
+      colorScheme: "dark",
+      reducedMotion: false,
+      clientLanguage: "zh-CN",
+      browserFamily: "Safari",
+      osFamily: "iOS",
+      cfCountry: "CN",
+      cfColo: "SZX",
+    });
+    await updateSnippetFeedback(
+      negativeTarget.db,
+      negative.feedbackId,
+      negativeClientId,
+      {
+        kind: "negative-contribution",
+        reason: "translation-issue",
+        suggestion,
+        attribution: "Example reader",
+        anonymousDisplay: true,
+      },
+    );
+    await createSnippetFeedback(positiveTarget.db, {
+      clientId: crypto.randomUUID(),
+      clientSubmissionId: crypto.randomUUID(),
+      snippetId: positiveTarget.snippetId,
+      revisionId: positiveTarget.revisionId,
+      localizationRevisionId: positiveTarget.localizationRevisionId,
+      requestedLocale: "en",
+      contentLocale: "en",
+      helpful: true,
+      pagePath: "/en/snippets/feedback-test",
+      entryReferrerKind: null,
+      deviceCategory: null,
+      viewportBucket: null,
+      inputMode: null,
+      colorScheme: null,
+      reducedMotion: null,
+      clientLanguage: null,
+      browserFamily: null,
+      osFamily: null,
+      cfCountry: null,
+      cfColo: null,
+    });
+
+    const pending = await listAdminFeedback(negativeTarget.db, {
+      query: group,
+      status: "pending",
+      rating: "all",
+      page: 1,
+    });
+    expect(pending.pagination.total).toBe(2);
+    expect(pending.items).toHaveLength(2);
+
+    const searched = await listAdminFeedback(negativeTarget.db, {
+      query: suggestion,
+      status: "all",
+      rating: "not-helpful",
+      page: 1,
+    });
+    expect(searched.items).toEqual([
+      expect.objectContaining({
+        id: negative.feedbackId,
+        excerpt: suggestion,
+        helpful: false,
+      }),
+    ]);
+
+    const detail = await getAdminFeedback(
+      negativeTarget.db,
+      negative.feedbackId,
+    );
+    expect(detail).toMatchObject({
+      id: negative.feedbackId,
+      revision: { id: negativeTarget.revisionId, number: 1 },
+      localizationRevision: {
+        id: negativeTarget.localizationRevisionId,
+        number: 1,
+      },
+      environment: { browserFamily: "Safari", cfCountry: "CN" },
+    });
+    expect(detail).not.toHaveProperty("clientId");
+    expect(detail).not.toHaveProperty("clientSubmissionId");
+  });
+
+  it("uses stable 25-item pagination and clamps out-of-range pages", async () => {
+    const group = crypto.randomUUID();
+    const target = await seedFeedbackTarget(group);
+    for (let index = 0; index < 26; index += 1) {
+      await createSnippetFeedback(target.db, {
+        clientId: crypto.randomUUID(),
+        clientSubmissionId: crypto.randomUUID(),
+        snippetId: target.snippetId,
+        revisionId: target.revisionId,
+        localizationRevisionId: target.localizationRevisionId,
+        requestedLocale: "en",
+        contentLocale: "en",
+        helpful: index % 2 === 0,
+        pagePath: "/en/snippets/feedback-test",
+        entryReferrerKind: null,
+        deviceCategory: null,
+        viewportBucket: null,
+        inputMode: null,
+        colorScheme: null,
+        reducedMotion: null,
+        clientLanguage: null,
+        browserFamily: null,
+        osFamily: null,
+        cfCountry: null,
+        cfColo: null,
+      });
+    }
+    const filters = {
+      query: group,
+      status: "pending" as const,
+      rating: "all" as const,
+      page: 1,
+    };
+    const first = await listAdminFeedback(target.db, filters);
+    const repeated = await listAdminFeedback(target.db, filters);
+    const last = await listAdminFeedback(target.db, { ...filters, page: 99 });
+    expect(first.items).toHaveLength(25);
+    expect(first.items.map(({ id }) => id)).toEqual(
+      repeated.items.map(({ id }) => id),
+    );
+    expect(last.pagination).toMatchObject({ page: 2, pageCount: 2, total: 26 });
+    expect(last.items).toHaveLength(1);
+    expect(first.items.map(({ id }) => id)).not.toContain(last.items[0]?.id);
+  });
+
+  it("reviews records reversibly and rejects stale writes", async () => {
+    const target = await seedFeedbackTarget(crypto.randomUUID());
+    const saved = await createSnippetFeedback(target.db, {
+      clientId: crypto.randomUUID(),
+      clientSubmissionId: crypto.randomUUID(),
+      snippetId: target.snippetId,
+      revisionId: target.revisionId,
+      localizationRevisionId: target.localizationRevisionId,
+      requestedLocale: "en",
+      contentLocale: "en",
+      helpful: true,
+      pagePath: "/en/snippets/feedback-test",
+      entryReferrerKind: null,
+      deviceCategory: null,
+      viewportBucket: null,
+      inputMode: null,
+      colorScheme: null,
+      reducedMotion: null,
+      clientLanguage: null,
+      browserFamily: null,
+      osFamily: null,
+      cfCountry: null,
+      cfColo: null,
+    });
+    const actor = localDevelopmentActor();
+    const original = await getAdminFeedback(target.db, saved.feedbackId);
+    expect(original).not.toBeNull();
+    await reviewAdminFeedback(target.db, actor, saved.feedbackId, {
+      status: "accepted",
+      note: "  Apply this suggestion.  ",
+      expectedUpdatedAt: original!.updatedAt,
+    });
+    const accepted = await getAdminFeedback(target.db, saved.feedbackId);
+    expect(accepted).toMatchObject({
+      reviewStatus: "accepted",
+      reviewNote: "Apply this suggestion.",
+      reviewedBy: actor.id,
+    });
+    expect(accepted?.reviewedAt).not.toBeNull();
+
+    await expect(
+      reviewAdminFeedback(target.db, actor, saved.feedbackId, {
+        status: "rejected",
+        note: "stale",
+        expectedUpdatedAt: original!.updatedAt,
+      }),
+    ).rejects.toMatchObject({ code: "CONFLICT" });
+
+    await reviewAdminFeedback(target.db, actor, saved.feedbackId, {
+      status: "pending",
+      note: "",
+      expectedUpdatedAt: accepted!.updatedAt,
+    });
+    expect(await getAdminFeedback(target.db, saved.feedbackId)).toMatchObject({
+      reviewStatus: "pending",
+      reviewNote: null,
+      reviewedBy: actor.id,
+    });
+    await expect(
+      reviewAdminFeedback(target.db, actor, crypto.randomUUID(), {
+        status: "accepted",
+        note: "",
+        expectedUpdatedAt: original!.updatedAt,
+      }),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
   });
 });

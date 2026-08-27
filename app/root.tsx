@@ -37,6 +37,39 @@ const themeInitializationScript = `
   })();
 `;
 
+const THEME_STORAGE_KEY = "scratch-snippets-theme";
+
+function ThemePreferenceSync() {
+  useEffect(() => {
+    const colorScheme = window.matchMedia("(prefers-color-scheme: dark)");
+
+    function storedTheme() {
+      try {
+        const value = window.localStorage.getItem(THEME_STORAGE_KEY);
+        return value === "light" || value === "dark" ? value : null;
+      } catch {
+        return null;
+      }
+    }
+
+    function applyTheme() {
+      document.documentElement.dataset.theme =
+        storedTheme() ?? (colorScheme.matches ? "dark" : "light");
+    }
+
+    function followSystemTheme(event: MediaQueryListEvent) {
+      if (storedTheme()) return;
+      document.documentElement.dataset.theme = event.matches ? "dark" : "light";
+    }
+
+    applyTheme();
+    colorScheme.addEventListener("change", followSystemTheme);
+    return () => colorScheme.removeEventListener("change", followSystemTheme);
+  }, []);
+
+  return null;
+}
+
 function NavigationProgress() {
   const navigation = useNavigation();
   const { start, stop } = useProgress();
@@ -82,6 +115,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           height="3px"
           options={{ showSpinner: false }}
         >
+          <ThemePreferenceSync />
           <NavigationProgress />
           {children}
         </ProgressProvider>

@@ -57,24 +57,6 @@ function getSnippetLanguageContext(
 }
 
 function ThemeToggle({ label }: { label: string }) {
-  useEffect(() => {
-    const colorScheme = window.matchMedia("(prefers-color-scheme: dark)");
-
-    function followSystemTheme(event: MediaQueryListEvent) {
-      try {
-        const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
-        if (storedTheme === "light" || storedTheme === "dark") return;
-      } catch {
-        // Continue following the system preference when storage is unavailable.
-      }
-
-      document.documentElement.dataset.theme = event.matches ? "dark" : "light";
-    }
-
-    colorScheme.addEventListener("change", followSystemTheme);
-    return () => colorScheme.removeEventListener("change", followSystemTheme);
-  }, []);
-
   function toggleTheme() {
     const root = document.documentElement;
     const nextTheme = root.dataset.theme === "dark" ? "light" : "dark";
