@@ -1,6 +1,7 @@
 import { createRequestHandler, RouterContextProvider } from "react-router";
 
 import { createDatabase } from "../app/db/client";
+import { withSecurityHeaders } from "../app/http/security";
 import { platformContext } from "../app/platform/context";
 
 const requestHandler = createRequestHandler(
@@ -17,6 +18,7 @@ export default {
       env,
     });
 
-    return requestHandler(request, context);
+    const response = await requestHandler(request, context);
+    return withSecurityHeaders(response);
   },
 } satisfies ExportedHandler<Env>;

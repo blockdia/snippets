@@ -14,6 +14,8 @@ as product and import reference.
 
 The target architecture and phased implementation plan are documented in
 [`PLAN.md`](./PLAN.md).
+The guarded production procedure and rollback checklist are documented in
+[`docs/release.md`](./docs/release.md).
 
 The D1 entities and publication invariants are documented in
 [`docs/architecture/content-domain.md`](./docs/architecture/content-domain.md).
@@ -96,7 +98,9 @@ npm run deploy:dry-run
 ```
 
 `npm run deploy` performs a real Cloudflare deployment and should only be used
-after configuring the target account and real D1 database id.
+after configuring the target account and real D1 database id. It runs a remote
+release gate first and refuses to deploy when resources, migrations, or imported
+content are not ready. Do not bypass the gate with a direct `wrangler deploy`.
 
 Create the private artifact bucket once before the first remote import or
 deployment:
@@ -107,6 +111,14 @@ npm run db:migrate:remote
 npm run import:legacy -- \
   --source /path/to/scratch-modules-gallery \
   --apply-remote
+```
+
+After provisioning and importing, follow the complete release runbook:
+
+```sh
+npm run release:remote-check
+npm run deploy
+npm run release:smoke -- --base-url https://your-production-host.example
 ```
 
 ## Licensing

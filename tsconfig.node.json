@@ -2,6 +2,7 @@
   "extends": "./tsconfig.json",
   "include": [
     "app/domain/translation-basis.ts",
+    "app/domain/release-config.ts",
     "app/i18n/locales.ts",
     "app/importer/**/*.ts",
     "app/search/fts.ts",
