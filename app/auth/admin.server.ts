@@ -12,6 +12,11 @@ export class AdminAuthenticationError extends Error {
   }
 }
 
+interface AccessConfiguration {
+  ACCESS_AUD: string;
+  ACCESS_TEAM_DOMAIN: string;
+}
+
 function configuredAccessValue(value: string, name: string): string {
   const normalized = value.trim();
   if (!normalized || normalized.includes("replace-me")) {
@@ -37,7 +42,7 @@ export function localDevelopmentActor(): AdminActor {
 
 export async function authenticateAdminRequest(
   request: Request,
-  env: Pick<Env, "ACCESS_AUD" | "ACCESS_TEAM_DOMAIN">,
+  env: AccessConfiguration,
   options: { allowLocalDevelopment: boolean },
 ): Promise<AdminActor> {
   const url = new URL(request.url);
