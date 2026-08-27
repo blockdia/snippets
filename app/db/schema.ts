@@ -760,6 +760,86 @@ export const searchDocuments = sqliteTable(
   ],
 );
 
+export const snippetFeedback = sqliteTable(
+  "snippet_feedback",
+  {
+    id: text("id").primaryKey(),
+    clientId: text("client_id").notNull(),
+    clientSubmissionId: text("client_submission_id").notNull(),
+    snippetId: text("snippet_id")
+      .notNull()
+      .references(() => snippets.id, { onDelete: "restrict" }),
+    revisionId: text("revision_id")
+      .notNull()
+      .references(() => snippetRevisions.id, { onDelete: "restrict" }),
+    localizationRevisionId: text("localization_revision_id")
+      .notNull()
+      .references(() => snippetLocalizationRevisions.id, {
+        onDelete: "restrict",
+      }),
+    requestedLocale: text("requested_locale")
+      .notNull()
+      .references(() => locales.code, { onDelete: "restrict" }),
+    contentLocale: text("content_locale")
+      .notNull()
+      .references(() => locales.code, { onDelete: "restrict" }),
+    helpful: integer("helpful", { mode: "boolean" }).notNull(),
+    reason: text("reason"),
+    reasonDetail: text("reason_detail"),
+    assistanceIntent: text("assistance_intent", {
+      enum: ["not-asked", "accepted", "declined"],
+    })
+      .notNull()
+      .default("not-asked"),
+    suggestion: text("suggestion"),
+    attribution: text("attribution"),
+    anonymousDisplay: integer("anonymous_display", { mode: "boolean" })
+      .notNull()
+      .default(true),
+    reviewStatus: text("review_status", {
+      enum: ["pending", "accepted", "rejected"],
+    })
+      .notNull()
+      .default("pending"),
+    reviewNote: text("review_note"),
+    reviewedBy: text("reviewed_by"),
+    reviewedAt: text("reviewed_at"),
+    pagePath: text("page_path").notNull(),
+    entryReferrerKind: text("entry_referrer_kind"),
+    deviceCategory: text("device_category"),
+    viewportBucket: text("viewport_bucket"),
+    inputMode: text("input_mode"),
+    colorScheme: text("color_scheme"),
+    reducedMotion: integer("reduced_motion", { mode: "boolean" }),
+    clientLanguage: text("client_language"),
+    browserFamily: text("browser_family"),
+    osFamily: text("os_family"),
+    cfCountry: text("cf_country"),
+    cfColo: text("cf_colo"),
+    createdAt: timestamp("created_at"),
+    updatedAt: timestamp("updated_at"),
+  },
+  (table) => [
+    uniqueIndex("snippet_feedback_submission_unique").on(
+      table.clientSubmissionId,
+    ),
+    index("snippet_feedback_review_idx").on(
+      table.reviewStatus,
+      table.createdAt,
+    ),
+    index("snippet_feedback_snippet_idx").on(table.snippetId, table.createdAt),
+    index("snippet_feedback_client_idx").on(table.clientId, table.createdAt),
+    check(
+      "snippet_feedback_assistance_intent_valid",
+      sql`${table.assistanceIntent} IN ('not-asked', 'accepted', 'declined')`,
+    ),
+    check(
+      "snippet_feedback_review_status_valid",
+      sql`${table.reviewStatus} IN ('pending', 'accepted', 'rejected')`,
+    ),
+  ],
+);
+
 export type Snippet = typeof snippets.$inferSelect;
 export type SnippetRevision = typeof snippetRevisions.$inferSelect;
 export type SnippetLocalization = typeof snippetLocalizations.$inferSelect;

@@ -1,0 +1,1 @@
+ALTER TABLE `snippet_feedback` ADD `reason_detail` text;

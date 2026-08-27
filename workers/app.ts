@@ -16,6 +16,10 @@ export default {
     context.set(platformContext, {
       db: createDatabase(env.DB),
       env,
+      requestMetadata: {
+        country: request.cf?.country ?? null,
+        colo: request.cf?.colo ?? null,
+      },
     });
 
     const response = await requestHandler(request, context);

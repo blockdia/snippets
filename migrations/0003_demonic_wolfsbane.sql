@@ -1,0 +1,46 @@
+CREATE TABLE `snippet_feedback` (
+	`id` text PRIMARY KEY NOT NULL,
+	`client_id` text NOT NULL,
+	`client_submission_id` text NOT NULL,
+	`snippet_id` text NOT NULL,
+	`revision_id` text NOT NULL,
+	`localization_revision_id` text NOT NULL,
+	`requested_locale` text NOT NULL,
+	`content_locale` text NOT NULL,
+	`helpful` integer NOT NULL,
+	`reason` text,
+	`assistance_intent` text DEFAULT 'not-asked' NOT NULL,
+	`suggestion` text,
+	`attribution` text,
+	`anonymous_display` integer DEFAULT true NOT NULL,
+	`review_status` text DEFAULT 'pending' NOT NULL,
+	`review_note` text,
+	`reviewed_by` text,
+	`reviewed_at` text,
+	`page_path` text NOT NULL,
+	`entry_referrer_kind` text,
+	`device_category` text,
+	`viewport_bucket` text,
+	`input_mode` text,
+	`color_scheme` text,
+	`reduced_motion` integer,
+	`client_language` text,
+	`browser_family` text,
+	`os_family` text,
+	`cf_country` text,
+	`cf_colo` text,
+	`created_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')) NOT NULL,
+	`updated_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')) NOT NULL,
+	FOREIGN KEY (`snippet_id`) REFERENCES `snippets`(`id`) ON UPDATE no action ON DELETE restrict,
+	FOREIGN KEY (`revision_id`) REFERENCES `snippet_revisions`(`id`) ON UPDATE no action ON DELETE restrict,
+	FOREIGN KEY (`localization_revision_id`) REFERENCES `snippet_localization_revisions`(`id`) ON UPDATE no action ON DELETE restrict,
+	FOREIGN KEY (`requested_locale`) REFERENCES `locales`(`code`) ON UPDATE no action ON DELETE restrict,
+	FOREIGN KEY (`content_locale`) REFERENCES `locales`(`code`) ON UPDATE no action ON DELETE restrict,
+	CONSTRAINT "snippet_feedback_assistance_intent_valid" CHECK("snippet_feedback"."assistance_intent" IN ('not-asked', 'accepted', 'declined')),
+	CONSTRAINT "snippet_feedback_review_status_valid" CHECK("snippet_feedback"."review_status" IN ('pending', 'accepted', 'rejected'))
+);
+--> statement-breakpoint
+CREATE UNIQUE INDEX `snippet_feedback_submission_unique` ON `snippet_feedback` (`client_submission_id`);--> statement-breakpoint
+CREATE INDEX `snippet_feedback_review_idx` ON `snippet_feedback` (`review_status`,`created_at`);--> statement-breakpoint
+CREATE INDEX `snippet_feedback_snippet_idx` ON `snippet_feedback` (`snippet_id`,`created_at`);--> statement-breakpoint
+CREATE INDEX `snippet_feedback_client_idx` ON `snippet_feedback` (`client_id`,`created_at`);

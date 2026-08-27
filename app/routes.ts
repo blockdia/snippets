@@ -3,6 +3,7 @@ import { type RouteConfig, index, route } from "@react-router/dev/routes";
 export default [
   route("sitemap.xml", "routes/sitemap.ts"),
   route("artifacts/sb3/*", "routes/sb3-artifact.ts"),
+  route("api/snippet-feedback", "routes/snippet-feedback.ts"),
   route("admin", "routes/admin-layout.tsx", [
     index("routes/admin-dashboard.tsx"),
     route("snippets", "routes/admin-snippets-index.tsx"),

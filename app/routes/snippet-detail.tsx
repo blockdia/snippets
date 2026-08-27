@@ -6,6 +6,7 @@ import { CopyButton } from "../components/copy-button";
 import { ScratchblocksRenderer } from "../components/scratchblocks-renderer";
 import { ShareButton } from "../components/share-button";
 import { SnippetDemo } from "../components/snippet-demo";
+import { SnippetFeedback } from "../components/snippet-feedback";
 import { SnippetMarkdown } from "../components/snippet-markdown";
 import { SnippetToc, type SnippetTocItem } from "../components/snippet-toc";
 import { publicPageHeaders } from "../http/public-page";
@@ -611,6 +612,12 @@ export default function SnippetDetail({ loaderData }: Route.ComponentProps) {
               </ul>
             </section>
           ) : null}
+
+          <SnippetFeedback
+            labels={messages.detail.feedback}
+            locale={loaderData.locale}
+            slug={snippet.slug}
+          />
         </div>
 
         {renderSidebar()}
