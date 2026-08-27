@@ -62,6 +62,17 @@ describe("snippet markdown", () => {
     expect(html).toContain(`href="#${scratchblocksScriptAnchorId("main")}"`);
   });
 
+  it("uses readable anchors for URL-safe script keys", () => {
+    expect(scratchblocksScriptAnchorId("main")).toBe("script-main");
+    expect(scratchblocksScriptAnchorId("Main_2")).toBe("script-Main_2");
+  });
+
+  it("keeps collision-resistant anchors for script keys with special characters", () => {
+    expect(scratchblocksScriptAnchorId("main script")).toMatch(
+      /^script-main-script-[a-z0-9]+$/,
+    );
+  });
+
   it("escapes raw HTML and removes unsafe link protocols", () => {
     const html = renderMarkdown(
       '<script>alert("xss")</script>\n\n[unsafe](javascript:alert(1))',

@@ -103,7 +103,7 @@ export function prepareSnippetMarkdown(markdown: string): string {
     );
 }
 
-export function scratchblocksScriptAnchorId(scriptKey: string): string {
+function hashedScratchblocksScriptAnchorId(scriptKey: string): string {
   let hash = 0;
   for (const character of scriptKey) {
     hash = (hash * 31 + character.charCodeAt(0)) >>> 0;
@@ -114,4 +114,11 @@ export function scratchblocksScriptAnchorId(scriptKey: string): string {
     .replace(/^-+|-+$/g, "")
     .slice(0, 48);
   return `script-${readable || "item"}-${hash.toString(36)}`;
+}
+
+export function scratchblocksScriptAnchorId(scriptKey: string): string {
+  if (/^[A-Za-z0-9_-]+$/.test(scriptKey)) {
+    return `script-${scriptKey}`;
+  }
+  return hashedScratchblocksScriptAnchorId(scriptKey);
 }
