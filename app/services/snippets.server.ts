@@ -199,6 +199,32 @@ export interface SearchTag {
   snippetCount: number;
 }
 
+export interface SitemapSnippet {
+  slug: string;
+  locale: Locale;
+  updatedAt: string;
+}
+
+export async function listSitemapSnippets(
+  db: AppDatabase,
+): Promise<SitemapSnippet[]> {
+  const rows = await db
+    .select({
+      slug: snippets.slug,
+      locale: searchDocuments.locale,
+      updatedAt: searchDocuments.updatedAt,
+    })
+    .from(searchDocuments)
+    .innerJoin(snippets, eq(snippets.id, searchDocuments.snippetId))
+    .where(eq(snippets.status, "active"))
+    .orderBy(asc(snippets.slug), asc(searchDocuments.locale));
+
+  return rows.flatMap((row) => {
+    const locale = canonicalizeLocale(row.locale);
+    return locale ? [{ ...row, locale }] : [];
+  });
+}
+
 export async function searchPublishedSnippets(
   db: AppDatabase,
   requestedLocale: Locale,

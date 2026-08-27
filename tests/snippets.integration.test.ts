@@ -27,6 +27,7 @@ import {
   PublicationError,
   listSearchTags,
   listPublishedSnippets,
+  listSitemapSnippets,
   publishLocalizationRevision,
   publishSnippetRevision,
   resolvePublishedSnippet,
@@ -293,6 +294,21 @@ describe("snippet publication model", () => {
       .from(searchDocuments)
       .where(eq(searchDocuments.snippetId, seed.snippetId));
     expect(documents).toHaveLength(2);
+
+    await expect(listSitemapSnippets(db)).resolves.toEqual(
+      expect.arrayContaining([
+        {
+          slug: seed.slug,
+          locale: "en",
+          updatedAt: "2026-08-25T00:01:00.000Z",
+        },
+        {
+          slug: seed.slug,
+          locale: "zh-CN",
+          updatedAt: "2026-08-25T00:01:00.000Z",
+        },
+      ]),
+    );
 
     const fts = await env.DB.prepare(
       `SELECT snippet_search_fts.rowid
