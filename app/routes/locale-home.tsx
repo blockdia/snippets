@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 
 import type { Route } from "./+types/locale-home";
+import { HeroBlocks } from "../components/hero-blocks";
 import { SnippetCard } from "../components/snippet-card";
 import { getMessages } from "../i18n/messages";
 import { toLocaleSegment } from "../i18n/locales";
@@ -52,14 +53,7 @@ export default function LocaleHome({ loaderData }: Route.ComponentProps) {
             <span aria-hidden="true">→</span>
           </Link>
         </div>
-        <div className="hero-blocks" aria-hidden="true">
-          <div className="scratch-shape shape-event">when ready</div>
-          <div className="scratch-shape shape-motion">move ideas forward</div>
-          <div className="scratch-shape shape-looks">
-            share across languages
-          </div>
-          <div className="hero-orbit">S</div>
-        </div>
+        <HeroBlocks locale={loaderData.locale} />
       </section>
 
       <section className="content-section">
