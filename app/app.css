@@ -45,6 +45,28 @@ summary {
   font: inherit;
 }
 
+select:not([multiple]) {
+  -webkit-appearance: none;
+  appearance: none;
+  padding-inline-end: 30px;
+  background-image:
+    linear-gradient(45deg, transparent 50%, currentcolor 50%),
+    linear-gradient(135deg, currentcolor 50%, transparent 50%);
+  background-position:
+    calc(100% - 14px) 50%,
+    calc(100% - 9px) 50%;
+  background-repeat: no-repeat;
+  background-size: 5px 5px;
+}
+
+@media (forced-colors: active) {
+  select:not([multiple]) {
+    -webkit-appearance: auto;
+    appearance: auto;
+    background-image: none;
+  }
+}
+
 :focus-visible {
   outline: 3px solid rgb(82 169 239 / 65%);
   outline-offset: 3px;
@@ -241,11 +263,11 @@ summary {
 .scratchblocks-settings-popover select {
   width: 100%;
   min-height: 38px;
-  padding: 0 10px;
+  padding: 0 30px 0 10px;
   border: 1px solid var(--line);
   border-radius: 10px;
   color: #574d67;
-  background: #fbfaff;
+  background-color: #fbfaff;
   font: inherit;
   font-size: 0.78rem;
 }
@@ -860,7 +882,7 @@ html[data-theme="dark"] .theme-icon-moon {
   max-width: 220px;
   padding: 0 34px 0 13px;
   color: #615770;
-  background: #f6f3fb;
+  background-color: #f6f3fb;
   cursor: pointer;
   font-size: 0.82rem;
 }
@@ -2432,7 +2454,7 @@ html[data-theme="dark"] .scratchblocks-settings-popover label > span {
 
 html[data-theme="dark"] .scratchblocks-settings-popover select {
   color: #cec6d9;
-  background: #292333;
+  background-color: #292333;
 }
 
 html[data-theme="dark"] .scratchblocks-settings-toggle-track {
@@ -2514,7 +2536,7 @@ html[data-theme="dark"] .search-form {
 html[data-theme="dark"] .search-query-field input,
 html[data-theme="dark"] .search-tag-field select {
   color: var(--ink);
-  background: #272131;
+  background-color: #272131;
 }
 
 html[data-theme="dark"] .search-icon,
@@ -3766,7 +3788,7 @@ html[data-theme="dark"] .error-card {
   border: 0;
   outline: 0;
   color: var(--admin-text);
-  background: transparent;
+  background-color: transparent;
   font-size: 0.74rem;
 }
 
@@ -4240,6 +4262,10 @@ html[data-theme="dark"] .error-card {
   font-size: 0.76rem;
 }
 
+.admin-form-field select {
+  padding-inline-end: 30px;
+}
+
 .admin-form-field textarea {
   line-height: 1.55;
   resize: vertical;
@@ -4591,6 +4617,10 @@ html[data-theme="dark"] .error-card {
   padding: 6px 8px;
   font-size: 0.68rem;
 }
+.admin-reference-row select,
+.admin-contributor-row select {
+  padding-inline-end: 30px;
+}
 .admin-advanced-fields > .admin-add-button {
   margin: 0 13px 13px;
 }
@@ -4707,7 +4737,7 @@ html[data-theme="dark"] .error-card {
 .admin-editor-preview select {
   width: auto;
   min-height: 32px;
-  padding: 5px 26px 5px 8px;
+  padding: 5px 30px 5px 8px;
   font-size: 0.66rem;
 }
 .admin-preview-surface {
