@@ -1,6 +1,7 @@
 import { isRouteErrorResponse, Link, Outlet, redirect } from "react-router";
 
 import type { Route } from "./+types/locale-layout";
+import { BackToTopButton } from "../components/back-to-top-button";
 import { ScratchblocksConfigProvider } from "../components/scratchblocks-config";
 import { SiteFooter, SiteHeader } from "../components/site-shell";
 import { getMessages } from "../i18n/messages";
@@ -36,6 +37,7 @@ export default function LocaleLayout({ loaderData }: Route.ComponentProps) {
           <Outlet />
         </div>
         <SiteFooter messages={messages} />
+        <BackToTopButton label={messages.navigation.backToTop} />
       </div>
     </ScratchblocksConfigProvider>
   );

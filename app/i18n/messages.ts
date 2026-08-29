@@ -14,6 +14,7 @@ const en = {
     lightTheme: "Light",
     darkTheme: "Dark",
     blockDisplay: "Blocks",
+    backToTop: "Back to top",
   },
   home: {
     eyebrow: "A shared library for Scratch makers",
@@ -191,6 +192,7 @@ const zhCN: Messages = {
     lightTheme: "浅色",
     darkTheme: "深色",
     blockDisplay: "积木显示",
+    backToTop: "返回顶部",
   },
   home: {
     eyebrow: "为 Scratch 创作者共享的代码库",
@@ -356,6 +358,7 @@ const zhTW: Messages = {
     lightTheme: "淺色",
     darkTheme: "深色",
     blockDisplay: "積木顯示",
+    backToTop: "返回頂部",
   },
   home: {
     eyebrow: "為 Scratch 創作者共享的程式庫",
