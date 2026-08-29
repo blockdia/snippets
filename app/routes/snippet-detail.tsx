@@ -428,7 +428,7 @@ export default function SnippetDetail({ loaderData }: Route.ComponentProps) {
               {snippet.tagSlugs.map((tag) => (
                 <Link
                   key={tag}
-                  to={`/${localeSegment}/search?tag=${encodeURIComponent(tag)}`}
+                  to={`/${localeSegment}/snippets?tag=${encodeURIComponent(tag)}`}
                 >
                   #{tag}
                 </Link>

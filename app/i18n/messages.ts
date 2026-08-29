@@ -21,10 +21,7 @@ const en = {
       "Recently published building blocks for your next project.",
   },
   index: {
-    eyebrow: "Snippet library",
-    title: "Find a pattern. Understand it. Make it yours.",
-    description:
-      "Each snippet is versioned, translated independently, and designed to be reused.",
+    description: "Browse and search reusable Scratch code snippets.",
     emptyTitle: "The library is ready for its first snippets",
     emptyDescription: "No snippets have been published yet.",
     previous: "Previous",
@@ -34,10 +31,6 @@ const en = {
     fallback: "English fallback",
   },
   search: {
-    eyebrow: "Search the library",
-    title: "Find the Scratch pattern you need.",
-    description:
-      "Search published titles, explanations, keywords, and Scratch code.",
     placeholder: "Try “clones”, “pen”, or “broadcast”…",
     submit: "Search",
     searching: "Searching…",
@@ -45,13 +38,6 @@ const en = {
     results: "results",
     result: "result",
     noResultsTitle: "No matching snippets",
-    noResultsDescription:
-      "Try a shorter phrase, another language, or remove the topic filter.",
-    promptTitle: "Start with a word or topic",
-    promptDescription:
-      "Results use the requested language when available and English only as a fallback.",
-    previous: "Previous",
-    next: "Next",
   },
   detail: {
     code: "Scratch code",
@@ -205,9 +191,7 @@ const zhCN: Messages = {
     latestDescription: "为下一个项目准备的近期发布模块。",
   },
   index: {
-    eyebrow: "代码片段库",
-    title: "找到一个模式，理解它，再把它变成自己的作品。",
-    description: "每个片段都有版本历史，内容与翻译可以独立演进。",
+    description: "浏览和搜索可复用的 Scratch 代码片段。",
     emptyTitle: "代码库已经准备好迎接第一批内容",
     emptyDescription: "目前还没有已发布的代码片段。",
     previous: "上一页",
@@ -217,9 +201,6 @@ const zhCN: Messages = {
     fallback: "暂以英文显示",
   },
   search: {
-    eyebrow: "搜索代码库",
-    title: "找到你需要的 Scratch 编程模式。",
-    description: "搜索已发布的标题、说明、关键词和 Scratch 代码。",
     placeholder: "试试“克隆体”“画笔”或“广播”……",
     submit: "搜索",
     searching: "搜索中……",
@@ -227,11 +208,6 @@ const zhCN: Messages = {
     results: "条结果",
     result: "条结果",
     noResultsTitle: "没有匹配的代码片段",
-    noResultsDescription: "可以缩短搜索词、换一种语言，或移除主题筛选。",
-    promptTitle: "输入关键词或选择主题",
-    promptDescription: "优先显示当前语言；没有对应翻译时才显示英文内容。",
-    previous: "上一页",
-    next: "下一页",
   },
   detail: {
     code: "Scratch 代码",
@@ -374,9 +350,7 @@ const zhTW: Messages = {
     latestDescription: "為下一個專案準備的近期發布模組。",
   },
   index: {
-    eyebrow: "程式片段庫",
-    title: "找到一個模式，理解它，再把它變成自己的作品。",
-    description: "每個片段都有版本歷史，內容與翻譯可以獨立演進。",
+    description: "瀏覽和搜尋可重用的 Scratch 程式片段。",
     emptyTitle: "程式庫已經準備好迎接第一批內容",
     emptyDescription: "目前還沒有已發布的程式片段。",
     previous: "上一頁",
@@ -386,9 +360,6 @@ const zhTW: Messages = {
     fallback: "暫以英文顯示",
   },
   search: {
-    eyebrow: "搜尋程式庫",
-    title: "找到你需要的 Scratch 程式模式。",
-    description: "搜尋已發布的標題、說明、關鍵字和 Scratch 程式碼。",
     placeholder: "試試「分身」「畫筆」或「廣播」……",
     submit: "搜尋",
     searching: "搜尋中……",
@@ -396,11 +367,6 @@ const zhTW: Messages = {
     results: "筆結果",
     result: "筆結果",
     noResultsTitle: "沒有符合的程式片段",
-    noResultsDescription: "可以縮短搜尋詞、換一種語言，或移除主題篩選。",
-    promptTitle: "輸入關鍵字或選擇主題",
-    promptDescription: "優先顯示目前語言；沒有對應翻譯時才顯示英文內容。",
-    previous: "上一頁",
-    next: "下一頁",
   },
   detail: {
     code: "Scratch 程式碼",

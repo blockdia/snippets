@@ -77,6 +77,7 @@ npm run release:smoke -- --base-url https://your-production-host.example
 ```
 
 The smoke test checks locale negotiation, home/list/search/detail/404 pages,
+the legacy search redirect,
 baseline security headers, at least one published snippet, and an SB3 demo with
 TurboWarp CORS plus a one-byte range response.
 

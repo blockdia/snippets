@@ -291,9 +291,6 @@ export function SiteHeader({
           <NavLink to={`/${localeSegment}/snippets`}>
             {messages.navigation.snippets}
           </NavLink>
-          <NavLink to={`/${localeSegment}/search`}>
-            {messages.navigation.search}
-          </NavLink>
         </nav>
 
         <div className="header-actions">

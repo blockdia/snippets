@@ -117,9 +117,28 @@ async function main() {
   if (!paths.length)
     throw new Error("Snippet listing contains no detail links.");
 
-  const search = await request(baseUrl, `/${localeSegment}/search?q=move`);
+  const search = await request(baseUrl, `/${localeSegment}/snippets?q=move`);
   assertStatus(search, 200, "Search");
   assertSecurityHeaders(search);
+
+  const legacySearch = await request(
+    baseUrl,
+    `/${localeSegment}/search?q=move&tag=motion&page=2`,
+  );
+  assertStatus(legacySearch, 308, "Legacy search redirect");
+  assertSecurityHeaders(legacySearch);
+  const legacySearchLocation = legacySearch.headers.get("location");
+  const expectedSearchLocation = `/${localeSegment}/snippets?q=move&tag=motion&page=2`;
+  if (
+    !legacySearchLocation ||
+    new URL(legacySearchLocation, baseUrl).pathname +
+      new URL(legacySearchLocation, baseUrl).search !==
+      expectedSearchLocation
+  ) {
+    throw new Error(
+      `Legacy search redirect: expected ${expectedSearchLocation}, received ${legacySearchLocation ?? "missing"}`,
+    );
+  }
 
   const missing = await request(
     baseUrl,

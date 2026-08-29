@@ -66,10 +66,14 @@ context as a window count. The repository runs the ranked page query and its
 matching count query in parallel. Both reuse the identical eligible-document
 and tag predicates.
 
-## Search route
+## Snippet listing and search route
 
-`/:locale/search` uses a GET form with shareable `q`, `tag`, and `page`
-parameters. Its loader performs all D1 work for initial SSR and client
-navigations. React Router pending state dims stale results and disables the
-submit button while the next loader response is in flight. Canonical metadata
-preserves normalized filters and pagination.
+`/:locale/snippets` combines the default listing and search results. Its GET
+form uses shareable `q`, `tag`, and `page` parameters, with an empty query and
+tag returning the full listing. The loader performs all D1 work for initial SSR
+and client navigations. React Router pending state dims stale results and
+disables the submit button while the next loader response is in flight.
+Canonical metadata preserves normalized filters and pagination.
+
+`/:locale/search` remains only as a permanent redirect for existing links. It
+normalizes and forwards the supported parameters to `/:locale/snippets`.
