@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type { Locale } from "../i18n/locales";
 import {
@@ -63,6 +63,22 @@ export function ScratchblocksCardPreview({
 }) {
   const motionRef = useRef<HTMLDivElement>(null);
   const { catHats, style, translation } = useScratchblocksConfig();
+  const renderKey = JSON.stringify([
+    source,
+    sourceLocale,
+    catHats,
+    style,
+    translation,
+  ]);
+  const [renderedKey, setRenderedKey] = useState<string | null>(null);
+  const [failedKey, setFailedKey] = useState<string | null>(null);
+  const previewState = !source
+    ? "empty"
+    : renderedKey === renderKey
+      ? "ready"
+      : failedKey === renderKey
+        ? "failed"
+        : "loading";
 
   useEffect(() => {
     const motion = motionRef.current;
@@ -71,6 +87,8 @@ export function ScratchblocksCardPreview({
 
   useEffect(() => {
     let cancelled = false;
+    const motion = motionRef.current;
+    motion?.replaceChildren();
 
     void (async () => {
       if (!source) return;
@@ -101,8 +119,12 @@ export function ScratchblocksCardPreview({
 
         if (cancelled || !motionRef.current) return;
         motionRef.current.replaceChildren(svg);
+        setFailedKey(null);
+        setRenderedKey(renderKey);
       } catch (error) {
         if (!cancelled) {
+          setRenderedKey(null);
+          setFailedKey(renderKey);
           console.warn("[scratchblocks] card preview render failed", error);
         }
       }
@@ -111,10 +133,14 @@ export function ScratchblocksCardPreview({
     return () => {
       cancelled = true;
     };
-  }, [catHats, source, sourceLocale, style, translation]);
+  }, [catHats, renderKey, source, sourceLocale, style, translation]);
 
   return (
-    <div className="snippet-card-preview-canvas">
+    <div
+      className="snippet-card-preview-canvas"
+      data-preview-state={previewState}
+    >
+      <div className="snippet-card-preview-loading" />
       <div className="snippet-card-preview-motion" ref={motionRef} />
     </div>
   );

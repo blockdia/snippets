@@ -683,12 +683,55 @@ select:not([multiple]) {
 }
 
 .snippet-card-preview-canvas {
+  position: relative;
   display: grid;
   width: 100%;
   height: 100%;
   overflow: hidden;
   padding: 18px 18px 0;
   place-items: start center;
+}
+
+.snippet-card-preview-loading {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: rgb(115 81 207 / 4%);
+  pointer-events: none;
+  transition:
+    opacity 120ms ease,
+    visibility 120ms ease;
+}
+
+.snippet-card-preview-loading::before {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 35%,
+    rgb(115 81 207 / 11%) 50%,
+    transparent 65%
+  );
+  content: "";
+  transform: translate3d(-100%, 0, 0);
+  will-change: transform;
+  animation: snippet-card-preview-loading 1.45s linear infinite;
+}
+
+.snippet-card-preview-canvas:not([data-preview-state="loading"])
+  .snippet-card-preview-loading {
+  visibility: hidden;
+  opacity: 0;
+}
+
+@keyframes snippet-card-preview-loading {
+  from {
+    transform: translate3d(-100%, 0, 0);
+  }
+
+  to {
+    transform: translate3d(100%, 0, 0);
+  }
 }
 
 .snippet-card-preview-motion {
@@ -2562,6 +2605,19 @@ html[data-theme="dark"] .snippet-card-preview {
   background-size:
     18px 18px,
     auto;
+}
+
+html[data-theme="dark"] .snippet-card-preview-loading {
+  background: rgb(174 145 255 / 4%);
+}
+
+html[data-theme="dark"] .snippet-card-preview-loading::before {
+  background: linear-gradient(
+    105deg,
+    transparent 35%,
+    rgb(174 145 255 / 11%) 50%,
+    transparent 65%
+  );
 }
 
 html[data-theme="dark"] .fallback-pill {
@@ -5365,6 +5421,7 @@ html[data-theme="dark"] .admin-editor-actionbar {
   }
 
   .scratchblocks-loading-dot,
+  .snippet-card-preview-loading::before,
   .scratchblocks-source-fallback::before {
     animation: none !important;
   }
