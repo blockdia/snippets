@@ -21,6 +21,7 @@ export interface ScratchblocksLabels {
   copyFailed: string;
   exportSvg: string;
   exportPng: string;
+  loading: string;
   renderFailed: string;
   codePreview: string;
 }
@@ -194,6 +195,10 @@ export function ScratchblocksRenderer({
         className="scratchblocks-canvas"
         ref={canvasRef}
       >
+        <div aria-live="polite" className="scratchblocks-loading" role="status">
+          <span aria-hidden="true" className="scratchblocks-loading-dot" />
+          {labels.loading}
+        </div>
         <pre className="scratchblocks-source-fallback">
           <code>{source}</code>
         </pre>

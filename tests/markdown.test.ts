@@ -12,6 +12,7 @@ const labels = {
   copyFailed: "Copy failed",
   exportSvg: "Export SVG",
   exportPng: "Export PNG",
+  loading: "Rendering block preview…",
   renderFailed: "Render failed",
   codePreview: "Code preview",
 };
@@ -45,6 +46,8 @@ describe("snippet markdown", () => {
     );
 
     expect(html).toContain('class="scratchblocks-renderer"');
+    expect(html).toContain('role="status"');
+    expect(html).toContain("Rendering block preview…");
     expect(html).toContain("when green flag clicked");
     expect(html).toContain('class="markdown-scratchblocks-inline-canvas"');
     expect(html).toContain("(a :: custom-arg)");

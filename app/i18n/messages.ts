@@ -111,6 +111,7 @@ const en = {
     copyFailed: "Copy failed",
     exportSvg: "SVG",
     exportPng: "PNG",
+    loadingPreview: "Rendering block preview…",
     renderFailed:
       "The visual preview could not be rendered. Source code remains available.",
     codePreview: "Rendered Scratch blocks",
@@ -286,6 +287,7 @@ const zhCN: Messages = {
     copyFailed: "复制失败",
     exportSvg: "SVG",
     exportPng: "PNG",
+    loadingPreview: "正在渲染积木预览…",
     renderFailed: "无法生成可视化预览，原始代码仍然可用。",
     codePreview: "渲染后的 Scratch 积木",
     highContrast: "高对比度",
@@ -450,6 +452,7 @@ const zhTW: Messages = {
     copyFailed: "複製失敗",
     exportSvg: "SVG",
     exportPng: "PNG",
+    loadingPreview: "正在產生積木預覽…",
     renderFailed: "無法產生視覺預覽，原始程式碼仍然可用。",
     codePreview: "渲染後的 Scratch 積木",
     highContrast: "高對比度",

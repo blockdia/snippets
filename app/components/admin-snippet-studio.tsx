@@ -79,6 +79,7 @@ const SCRATCH_LABELS: ScratchblocksLabels = {
   copyFailed: "复制失败",
   exportSvg: "导出 SVG",
   exportPng: "导出 PNG",
+  loading: "正在渲染积木预览…",
   renderFailed: "无法渲染积木",
   codePreview: "Scratch 积木预览",
 };

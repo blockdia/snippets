@@ -236,6 +236,7 @@ export default function SnippetDetail({ loaderData }: Route.ComponentProps) {
             copyFailed: messages.detail.copyFailed,
             exportSvg: messages.detail.exportSvg,
             exportPng: messages.detail.exportPng,
+            loading: messages.detail.loadingPreview,
             renderFailed: messages.detail.renderFailed,
             codePreview: messages.detail.codePreview,
           }}
@@ -584,6 +585,7 @@ export default function SnippetDetail({ loaderData }: Route.ComponentProps) {
                     copyFailed: messages.detail.copyFailed,
                     exportSvg: messages.detail.exportSvg,
                     exportPng: messages.detail.exportPng,
+                    loading: messages.detail.loadingPreview,
                     renderFailed: messages.detail.renderFailed,
                     codePreview: messages.detail.codePreview,
                   }}
