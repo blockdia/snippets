@@ -2804,6 +2804,7 @@ html[data-theme="dark"] .error-card {
   }
 
   .hero-blocks {
+    display: none;
     width: min(560px, 100%);
     min-height: 340px;
     margin: 0 auto;
