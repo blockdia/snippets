@@ -863,12 +863,19 @@ html[data-theme="dark"] .theme-icon-moon {
 }
 
 .search-form button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 0 21px;
   color: white;
   background: linear-gradient(135deg, #7d59d8, #6241bc);
   cursor: pointer;
   font-size: 0.86rem;
   font-weight: 780;
+}
+
+.search-button-icon {
+  display: none;
 }
 
 .search-form button:disabled {
@@ -3088,12 +3095,55 @@ html[data-theme="dark"] .error-card {
   }
 
   .search-form {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr) 47px;
+  }
+
+  .search-tag-field {
+    display: none;
+  }
+
+  .search-form.has-selected-tag {
+    grid-template-columns: minmax(0, 1fr) minmax(82px, 0.65fr) 47px;
+  }
+
+  .search-form.has-selected-tag .search-tag-field {
+    display: block;
+  }
+
+  .search-icon {
+    display: none;
+  }
+
+  .search-query-field input {
+    padding-inline: 12px;
+    font-size: 1rem;
   }
 
   .search-tag-field select {
     width: 100%;
     max-width: none;
+    padding-right: 26px;
+  }
+
+  .search-form button {
+    width: 47px;
+    padding: 0;
+  }
+
+  .search-button-icon {
+    display: block;
+  }
+
+  .search-button-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
 
   .scratchblocks-canvas {

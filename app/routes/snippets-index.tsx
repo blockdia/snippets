@@ -90,7 +90,7 @@ export default function SnippetsIndex({ loaderData }: Route.ComponentProps) {
         <h1>{messages.navigation.snippets}</h1>
         <Form
           aria-label={messages.navigation.search}
-          className="search-form"
+          className={`search-form${loaderData.tag ? " has-selected-tag" : ""}`}
           key={`${loaderData.query}:${loaderData.tag}`}
           method="get"
         >
@@ -122,7 +122,15 @@ export default function SnippetsIndex({ loaderData }: Route.ComponentProps) {
             </select>
           </label>
           <button disabled={isSearching} type="submit">
-            {isSearching ? messages.search.searching : messages.search.submit}
+            <MagnifyingGlassIcon
+              aria-hidden="true"
+              className="search-button-icon"
+              size={20}
+              weight="bold"
+            />
+            <span className="search-button-label">
+              {isSearching ? messages.search.searching : messages.search.submit}
+            </span>
           </button>
         </Form>
       </header>
