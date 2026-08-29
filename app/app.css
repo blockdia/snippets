@@ -664,6 +664,7 @@ select:not([multiple]) {
 
 .snippet-card-preview {
   display: grid;
+  width: 100%;
   min-height: 144px;
   max-height: 176px;
   aspect-ratio: 2 / 1;
