@@ -23,6 +23,44 @@ const localeLabels: Record<Locale, string> = {
 
 const THEME_STORAGE_KEY = "scratch-snippets-theme";
 
+type ThemePreference = "system" | "light" | "dark";
+
+function getStoredThemePreference(): ThemePreference {
+  try {
+    const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+    return storedTheme === "light" || storedTheme === "dark"
+      ? storedTheme
+      : "system";
+  } catch {
+    return "system";
+  }
+}
+
+function applyThemePreference(preference: ThemePreference) {
+  if (preference === "system") {
+    try {
+      window.localStorage.removeItem(THEME_STORAGE_KEY);
+    } catch {
+      // The system theme still applies for this page when storage is blocked.
+    }
+
+    document.documentElement.dataset.theme = window.matchMedia(
+      "(prefers-color-scheme: dark)",
+    ).matches
+      ? "dark"
+      : "light";
+    return;
+  }
+
+  document.documentElement.dataset.theme = preference;
+
+  try {
+    window.localStorage.setItem(THEME_STORAGE_KEY, preference);
+  } catch {
+    // The selected theme still applies for this page when storage is blocked.
+  }
+}
+
 function pathForLocale(pathname: string, locale: Locale): string {
   const segments = pathname.split("/");
   segments[1] = toLocaleSegment(locale);
@@ -56,46 +94,17 @@ function getSnippetLanguageContext(
   return null;
 }
 
-function ThemeToggle({ label }: { label: string }) {
-  function toggleTheme() {
-    const root = document.documentElement;
-    const nextTheme = root.dataset.theme === "dark" ? "light" : "dark";
-
-    root.dataset.theme = nextTheme;
-
-    try {
-      window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
-    } catch {
-      // The selected theme still applies for this page when storage is blocked.
-    }
-  }
-
-  return (
-    <button
-      aria-label={label}
-      className="theme-toggle"
-      onClick={toggleTheme}
-      title={label}
-      type="button"
-    >
-      <span aria-hidden="true" className="theme-icon theme-icon-sun">
-        ☀
-      </span>
-      <span aria-hidden="true" className="theme-icon theme-icon-moon">
-        ◐
-      </span>
-    </button>
-  );
-}
-
-function ScratchblocksSettings({ messages }: { messages: Messages }) {
+function DisplaySettings({ messages }: { messages: Messages }) {
   const appearanceId = useId();
   const catHatsId = useId();
   const scaleId = useId();
+  const themeId = useId();
   const translationId = useId();
   const panelId = useId();
   const settingsRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
+  const [themePreference, setThemePreference] =
+    useState<ThemePreference>("system");
   const {
     catHats,
     scale,
@@ -106,6 +115,10 @@ function ScratchblocksSettings({ messages }: { messages: Messages }) {
     setStyle,
     setTranslation,
   } = useScratchblocksConfig();
+
+  useEffect(() => {
+    setThemePreference(getStoredThemePreference());
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -136,10 +149,10 @@ function ScratchblocksSettings({ messages }: { messages: Messages }) {
       <button
         aria-controls={panelId}
         aria-expanded={open}
-        aria-label={messages.navigation.scratchblocksSettings}
+        aria-label={messages.navigation.displaySettings}
         className="scratchblocks-settings-button"
         onClick={() => setOpen((current) => !current)}
-        title={messages.navigation.scratchblocksSettings}
+        title={messages.navigation.displaySettings}
         type="button"
       >
         <svg aria-hidden="true" viewBox="0 0 24 24">
@@ -150,89 +163,118 @@ function ScratchblocksSettings({ messages }: { messages: Messages }) {
 
       {open ? (
         <div
-          aria-label={messages.navigation.scratchblocksSettings}
+          aria-label={messages.navigation.displaySettings}
           className="scratchblocks-settings-popover"
           id={panelId}
         >
           <div className="scratchblocks-settings-heading">
-            <h2>{messages.navigation.scratchblocksSettings}</h2>
+            <h2>{messages.navigation.displaySettings}</h2>
           </div>
 
-          <label htmlFor={appearanceId}>
-            <span>{messages.detail.appearance}</span>
-            <select
-              id={appearanceId}
-              onChange={(event) =>
-                setStyle(event.currentTarget.value as ScratchblocksStyle)
-              }
-              value={style}
-            >
-              <option value="scratch3">Scratch 3</option>
-              <option value="scratch3-high-contrast">
-                Scratch 3 · {messages.detail.highContrast}
-              </option>
-              <option value="scratch3-outline">
-                Scratch 3 · {messages.detail.outline}
-              </option>
-              <option value="scratch2">Scratch 2</option>
-            </select>
-          </label>
-
-          <label className="scratchblocks-settings-toggle" htmlFor={catHatsId}>
-            <span>{messages.detail.catHats}</span>
-            <input
-              checked={catHats}
-              className="visually-hidden"
-              id={catHatsId}
-              onChange={(event) => setCatHats(event.currentTarget.checked)}
-              type="checkbox"
-            />
-            <span
-              aria-hidden="true"
-              className="scratchblocks-settings-toggle-track"
-            />
-          </label>
-
-          <label htmlFor={scaleId}>
-            <span>{messages.detail.blockScale}</span>
-            <select
-              id={scaleId}
-              onChange={(event) =>
-                setScale(
-                  Number(event.currentTarget.value) as ScratchblocksScale,
-                )
-              }
-              value={scale}
-            >
-              {SCRATCHBLOCKS_SCALES.map((scaleOption) => (
-                <option key={scaleOption} value={scaleOption}>
-                  {scaleOption * 100}%
+          <section className="scratchblocks-settings-section">
+            <h3>{messages.navigation.interfaceAppearance}</h3>
+            <label htmlFor={themeId}>
+              <span>{messages.navigation.colorTheme}</span>
+              <select
+                id={themeId}
+                onChange={(event) => {
+                  const preference = event.currentTarget
+                    .value as ThemePreference;
+                  setThemePreference(preference);
+                  applyThemePreference(preference);
+                }}
+                value={themePreference}
+              >
+                <option value="system">
+                  {messages.navigation.followSystemTheme}
                 </option>
-              ))}
-            </select>
-          </label>
+                <option value="light">{messages.navigation.lightTheme}</option>
+                <option value="dark">{messages.navigation.darkTheme}</option>
+              </select>
+            </label>
+          </section>
 
-          <label htmlFor={translationId}>
-            <span>{messages.detail.translateCode}</span>
-            <select
-              id={translationId}
-              onChange={(event) =>
-                setTranslation(
-                  event.currentTarget.value as ScratchblocksTranslation,
-                )
-              }
-              value={translation}
-            >
-              <option value="original">
-                {messages.detail.originalLanguage}
-              </option>
-              {SUPPORTED_LOCALES.map((targetLocale) => (
-                <option key={targetLocale} value={targetLocale}>
-                  {localeLabels[targetLocale]}
+          <section className="scratchblocks-settings-section">
+            <h3>{messages.navigation.blockDisplay}</h3>
+            <label htmlFor={appearanceId}>
+              <span>{messages.detail.appearance}</span>
+              <select
+                id={appearanceId}
+                onChange={(event) =>
+                  setStyle(event.currentTarget.value as ScratchblocksStyle)
+                }
+                value={style}
+              >
+                <option value="scratch3">Scratch 3</option>
+                <option value="scratch3-high-contrast">
+                  Scratch 3 · {messages.detail.highContrast}
                 </option>
-              ))}
-            </select>
-          </label>
+                <option value="scratch3-outline">
+                  Scratch 3 · {messages.detail.outline}
+                </option>
+                <option value="scratch2">Scratch 2</option>
+              </select>
+            </label>
+
+            <label
+              className="scratchblocks-settings-toggle"
+              htmlFor={catHatsId}
+            >
+              <span>{messages.detail.catHats}</span>
+              <input
+                checked={catHats}
+                className="visually-hidden"
+                id={catHatsId}
+                onChange={(event) => setCatHats(event.currentTarget.checked)}
+                type="checkbox"
+              />
+              <span
+                aria-hidden="true"
+                className="scratchblocks-settings-toggle-track"
+              />
+            </label>
+
+            <label htmlFor={scaleId}>
+              <span>{messages.detail.blockScale}</span>
+              <select
+                id={scaleId}
+                onChange={(event) =>
+                  setScale(
+                    Number(event.currentTarget.value) as ScratchblocksScale,
+                  )
+                }
+                value={scale}
+              >
+                {SCRATCHBLOCKS_SCALES.map((scaleOption) => (
+                  <option key={scaleOption} value={scaleOption}>
+                    {scaleOption * 100}%
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label htmlFor={translationId}>
+              <span>{messages.detail.translateCode}</span>
+              <select
+                id={translationId}
+                onChange={(event) =>
+                  setTranslation(
+                    event.currentTarget.value as ScratchblocksTranslation,
+                  )
+                }
+                value={translation}
+              >
+                <option value="original">
+                  {messages.detail.originalLanguage}
+                </option>
+                {SUPPORTED_LOCALES.map((targetLocale) => (
+                  <option key={targetLocale} value={targetLocale}>
+                    {localeLabels[targetLocale]}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </section>
         </div>
       ) : null}
     </div>
@@ -294,8 +336,7 @@ export function SiteHeader({
         </nav>
 
         <div className="header-actions">
-          <ScratchblocksSettings messages={messages} />
-          <ThemeToggle label={messages.navigation.theme} />
+          <DisplaySettings messages={messages} />
           <details className="locale-switcher" ref={localeSwitcherRef}>
             <summary aria-label={messages.navigation.language}>
               <svg aria-hidden="true" viewBox="0 0 24 24">

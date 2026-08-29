@@ -188,7 +188,6 @@ select:not([multiple]) {
   position: relative;
 }
 
-.theme-toggle,
 .scratchblocks-settings-button {
   position: relative;
   display: grid;
@@ -218,7 +217,6 @@ select:not([multiple]) {
   stroke-width: 1.6;
 }
 
-.theme-toggle:hover,
 .scratchblocks-settings-button:hover,
 .scratchblocks-settings-button[aria-expanded="true"] {
   color: var(--purple-dark);
@@ -233,18 +231,37 @@ select:not([multiple]) {
   right: 0;
   display: grid;
   width: min(310px, calc(100vw - 28px));
+  max-height: calc(100vh - 84px);
   gap: 14px;
   padding: 17px;
   border: 1px solid var(--line);
   border-radius: 17px;
   background: #fff;
   box-shadow: 0 20px 56px rgb(46 31 84 / 18%);
+  overflow-y: auto;
 }
 
 .scratchblocks-settings-heading h2 {
   margin: 0;
   color: #433657;
   font-size: 0.88rem;
+}
+
+.scratchblocks-settings-section {
+  display: grid;
+  gap: 12px;
+}
+
+.scratchblocks-settings-section + .scratchblocks-settings-section {
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.scratchblocks-settings-section h3 {
+  margin: 0;
+  color: #625879;
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
 }
 
 .scratchblocks-settings-popover label {
@@ -325,23 +342,6 @@ select:not([multiple]) {
   + .scratchblocks-settings-toggle-track {
   outline: 3px solid rgb(82 169 239 / 65%);
   outline-offset: 3px;
-}
-
-.theme-icon {
-  grid-area: 1 / 1;
-  font-size: 1rem;
-  line-height: 1;
-}
-
-.theme-icon-moon,
-html[data-theme="dark"] .theme-icon-sun {
-  visibility: hidden;
-  transform: scale(0.6) rotate(-30deg);
-}
-
-html[data-theme="dark"] .theme-icon-moon {
-  visibility: visible;
-  transform: none;
 }
 
 .locale-switcher summary {
@@ -2387,7 +2387,6 @@ html[data-theme="dark"] .site-header {
 
 html[data-theme="dark"] .primary-nav a,
 html[data-theme="dark"] .locale-switcher summary,
-html[data-theme="dark"] .theme-toggle,
 html[data-theme="dark"] .scratchblocks-settings-button {
   color: #b6aec7;
   background: rgb(43 36 58 / 72%);
@@ -2399,7 +2398,6 @@ html[data-theme="dark"] .primary-nav a {
 
 html[data-theme="dark"] .primary-nav a:hover,
 html[data-theme="dark"] .primary-nav a.active,
-html[data-theme="dark"] .theme-toggle:hover,
 html[data-theme="dark"] .scratchblocks-settings-button:hover,
 html[data-theme="dark"] .scratchblocks-settings-button[aria-expanded="true"] {
   color: #d5c8ff;
@@ -2418,6 +2416,10 @@ html[data-theme="dark"] .scratchblocks-settings-popover {
 
 html[data-theme="dark"] .scratchblocks-settings-heading h2 {
   color: #e1d9ec;
+}
+
+html[data-theme="dark"] .scratchblocks-settings-section h3 {
+  color: #c4bacf;
 }
 
 html[data-theme="dark"] .scratchblocks-settings-popover label > span {
@@ -2951,7 +2953,15 @@ html[data-theme="dark"] .error-card {
     gap: 4px;
   }
 
-  .theme-toggle,
+  .scratchblocks-settings-popover {
+    position: fixed;
+    top: 74px;
+    right: 14px;
+    left: 14px;
+    width: auto;
+    max-height: calc(100vh - 88px);
+  }
+
   .scratchblocks-settings-button,
   .locale-switcher summary {
     width: 34px;
@@ -3178,12 +3188,6 @@ html[data-theme="dark"] .error-card {
   .footer-license {
     grid-column: 2;
     justify-self: start;
-  }
-}
-
-@media (max-width: 360px) {
-  .theme-toggle {
-    display: none;
   }
 }
 
