@@ -378,7 +378,12 @@ export function SiteFooter({ messages }: { messages: Messages }) {
         S
       </span>
       <p>{messages.footer.description}</p>
-      <p className="footer-license">AGPL-3.0 · Content licenses vary</p>
+      <p className="footer-license">
+        AGPL-3.0 · Content licenses vary ·{" "}
+        <a href="https://blockdia.com/privacy">
+          {messages.footer.privacyPolicy}
+        </a>
+      </p>
     </footer>
   );
 }

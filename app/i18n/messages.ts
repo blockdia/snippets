@@ -169,6 +169,7 @@ const en = {
   },
   footer: {
     description: "Reusable Scratch ideas, explained across languages.",
+    privacyPolicy: "Privacy policy",
   },
 } as const;
 
@@ -341,6 +342,7 @@ const zhCN: Messages = {
   },
   footer: {
     description: "跨语言分享和解释可复用的 Scratch 思路。",
+    privacyPolicy: "隐私政策",
   },
 };
 
@@ -507,6 +509,7 @@ const zhTW: Messages = {
   },
   footer: {
     description: "跨語言分享和解釋可重用的 Scratch 構想。",
+    privacyPolicy: "隱私權政策",
   },
 };
 
